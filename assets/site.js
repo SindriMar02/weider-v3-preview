@@ -443,7 +443,8 @@
     G.set(main, { '--ct': '0px', '--cr': '0px', '--cb': '0px', '--cl': '0px', '--cr0': '0px' });
     G.set(img, { scale: 1.2 });
     G.set(logoIn, { opacity: 0, y: 40 });
-    G.set(cards, { y: function (i) { return innerHeight * (.7 + i * .15); }, rotate: function (i) { return i ? 6 : -6; } });
+    // start every card fully below the viewport (measured), invisible, so nothing peeks in during the intro
+    G.set(cards, { autoAlpha: 0, y: function (i, el) { return innerHeight - el.getBoundingClientRect().top + 80 + i * 60; }, rotate: function (i) { return i ? 6 : -6; } });
     G.set(ui, { opacity: 0, y: 18 });
     G.set(chrome, { opacity: 0 });
     hero.classList.add('go');
@@ -460,6 +461,7 @@
         .to(main, Object.assign({ duration: 1.5, ease: 'expo.inOut' }, r), 1.05)
         .to(img, { scale: 1, duration: 1.5, ease: 'expo.inOut' }, 1.05)
         .to(cards, { y: 0, rotate: 0, duration: 1.4, stagger: .14, ease: 'power3.out' }, 1.75)
+        .to(cards, { autoAlpha: 1, duration: .5, stagger: .14, ease: 'power1.out' }, 1.75)
         .to(chrome, { opacity: 1, duration: .8, ease: 'power2.out', clearProps: 'opacity' }, 1.9)
         .to(ui, { opacity: 1, y: 0, duration: .9, stagger: .09, ease: 'power3.out' }, 2.05);
     });

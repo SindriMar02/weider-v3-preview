@@ -626,39 +626,137 @@
     return { full: full, rate: rate, off: off, pay: full - off, perYear: Math.round(off * 52 / wk), ok: full >= SUB.min };
   }
   function askrift() {
-    var grid = $('#ask-grid'), sum = $('#ask-sum'), box = {}, wk = 4;
+    var grid = $('#ask-grid'), sum = $('#ask-sum'), box = {}, wk = 4, cat = 'all', lastPay = 0, payTw = null, prevKeys = {};
+    var short = function (p) { return p.t.replace(/\s+\d[\d.,–\s]*(g|kg)\b.*$/i, '').replace(/^WEIDER®\s*/, ''); };
+    var CAT_S = { protein: 'Prótein', kreatin: 'Kreatín', pre: 'Pre-workout', amino: 'Amínósýrur', vitamin: 'Vítamín' };
+    var anim = function () { return G && !reduce; };
+    // hero: the Styrkur box as three photo cards + a price tag
+    var hv = $('#ax-hv'), hl = [byH['gold-whey'], byH['micronized-creatine'], byH[SUB.gift]].filter(Boolean);
+    var preLines = PRESETS.map(function (pr) { return pr[2].map(function (x) { return { h: x[0], vi: bestV(byH[x[0]], x[1]), q: 1 }; }); });
+    if (hv) {
+      var hm = boxMath(preLines[1], 4);
+      hv.innerHTML = hl.map(function (p, i) { return '<div class="axv axv' + i + '">' + ph(p, i === 0, false) + '</div>'; }).join('') +
+        '<div class="axv-tag"><span class="lbl">Styrkur-boxið</span><span class="axv-p"><s>' + kr(hm.full) + '</s><strong>' + kr(hm.pay) + '</strong></span><small>á mánuði · hristibrúsi fylgir</small></div>';
+      if (anim()) {
+        G.from('.ax-hero-t > *', { y: 26, opacity: 0, duration: 1, stagger: .08, ease: 'power3.out', clearProps: 'transform,opacity' });
+        G.from('.axv', { y: 70, opacity: 0, rotation: function (i) { return [0, -6, 6][i]; }, duration: 1.2, stagger: .1, delay: .15, ease: 'expo.out', clearProps: 'opacity' });
+        G.from('.axv-tag', { y: 20, opacity: 0, duration: .9, delay: .6, ease: 'power3.out', clearProps: 'transform,opacity' });
+        if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+          var cs = $$('.axv', hv), qx = cs.map(function (c) { return G.quickTo(c, 'x', { duration: 1, ease: 'power3' }); }), qy = cs.map(function (c) { return G.quickTo(c, 'y', { duration: 1, ease: 'power3' }); });
+          $('.ax-hero').addEventListener('pointermove', function (e) { var dx = e.clientX / innerWidth - .5, dy = e.clientY / innerHeight - .5; cs.forEach(function (c, i) { var d = [10, 22, -18][i]; qx[i](dx * d); qy[i](dy * d * .6); }); });
+          $('.ax-hero').addEventListener('pointerleave', function () { qx.forEach(function (q) { q(0); }); qy.forEach(function (q) { q(0); }); });
+        }
+      }
+    }
+    // step 1a: ready boxes
+    $('#ask-presets').innerHTML = PRESETS.map(function (pr, i) {
+      var ls = preLines[i], m = boxMath(ls, 4);
+      return '<article class="preset" data-pre="' + i + '">' +
+        '<div class="pre-imgs n' + ls.length + '">' + ls.map(function (l) { return ph(byH[l.h]); }).join('') + (m.rate >= SUB.tier ? '<span class="pre-badge">15% afsláttur</span>' : '') + '</div>' +
+        '<div class="pre-b"><h3 class="pre-n">' + esc(pr[0]) + '</h3><p class="pre-d">' + esc(pr[1]) + '</p>' +
+        '<ul class="pre-l">' + ls.map(function (l) { var p = byH[l.h]; return '<li>' + ICON.check + '<span>' + esc(short(p)) + (many(p) ? ' <small>' + esc(p.v[l.vi].t) + '</small>' : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<div class="pre-p"><s>' + kr(m.full) + '</s><strong>' + kr(m.pay) + '</strong><small>á mánuði</small></div><p class="pre-s">Þú sparar ' + kr(m.perYear) + ' á ári</p>' +
+        '<div class="pre-a"><button type="button" class="pre-go" data-go>Velja þetta box</button><button type="button" class="pre-edit" data-edit>Breyta innihaldi</button></div></div></article>';
+    }).join('');
+    // step 1b: build your own
+    var cats = []; STAPLES.forEach(function (h) { var p = byH[h]; if (p && CAT_S[p.cat] && cats.indexOf(p.cat) < 0) cats.push(p.cat); });
+    $('#ax-cats').innerHTML = '<button type="button" aria-pressed="true" data-cat="all">Allt</button>' + cats.map(function (c) { return '<button type="button" aria-pressed="false" data-cat="' + c + '">' + CAT_S[c] + '</button>'; }).join('');
     grid.innerHTML = STAPLES.map(function (h) {
       var p = byH[h]; if (!p) return ''; var vi = bestV(p);
       var opts = many(p) ? '<label class="sr" for="av-' + h + '">Útgáfa: ' + esc(p.t) + '</label><select class="av" id="av-' + h + '" data-h="' + h + '">' + p.v.map(function (v, i) { return '<option value="' + i + '"' + (i === vi ? ' selected' : '') + (v.avail ? '' : ' disabled') + '>' + esc(v.t) + (v.avail ? '' : ' (uppselt)') + '</option>'; }).join('') + '</select>' : '';
-      return '<article class="ab" data-h="' + h + '">' + ph(p) + '<div class="ab-b"><span class="pc-c">' + esc(catLabel[p.cat] || '') + '</span><h3 class="pc-n">' + esc(p.t) + '</h3>' + opts +
+      return '<article class="ab" data-h="' + h + '" data-cat="' + p.cat + '">' + ph(p) + '<span class="ab-in">' + ICON.check + 'Í boxinu</span><div class="ab-b"><span class="pc-c">' + esc(CAT_S[p.cat] || catLabel[p.cat] || '') + '</span><h3 class="pc-n">' + esc(short(p)) + '</h3>' + opts +
         '<span class="ab-p" data-abp></span><div class="ab-a" data-aba></div></div></article>';
     }).join('');
-    $('#ask-presets').innerHTML = PRESETS.map(function (pr, i) {
-      var lines = pr[2].map(function (x) { return { h: x[0], vi: bestV(byH[x[0]], x[1]), q: 1 }; }), m = boxMath(lines, 4);
-      return '<button type="button" class="preset" data-pre="' + i + '"><b>' + esc(pr[0]) + '</b><span>' + esc(pr[1]) + '</span><span class="preset-p"><s>' + kr(m.full) + '</s> ' + kr(m.pay) + ' <small>á mánuði</small></span></button>';
-    }).join('');
+    // step 2: how often
+    var ivEl = $('#ax-iv');
+    ivEl.innerHTML = Object.keys(SUB.iv).map(function (k) { return '<button type="button" role="radio" data-wk="' + k + '" aria-checked="' + (+k === wk) + '" tabindex="' + (+k === wk ? 0 : -1) + '"><i aria-hidden="true"></i><b>' + SUB.iv[k] + '</b><span>' + Math.round(52 / k) + ' sendingar á ári</span><em data-ivs></em></button>'; }).join('');
+    // step 3: summary skeleton (parts update in place so numbers and the meter can move)
+    sum.innerHTML = '<div class="as-h"><span class="ax-n">03</span><div><p class="lbl">Boxið þitt</p><p class="as-c" id="as-c"></p></div></div>' +
+      '<ul class="as-l" id="as-l"></ul><p class="as-empty" id="as-empty">Tómt enn. Veldu tilbúið box eða raðaðu þínu eigin.</p>' +
+      '<div class="as-m" id="as-m"><div class="as-bar"><i id="as-fill"></i><b style="left:' + (SUB.min / SUB.tierAt * 100).toFixed(1) + '%"></b></div><div class="as-ticks"><span style="left:' + (SUB.min / SUB.tierAt * 100).toFixed(1) + '%">Lágmark</span><span>15%</span></div><p id="as-mt"></p></div>' +
+      '<button type="button" class="as-iv" data-jump="skref-2"><span>Sending</span><b id="as-ivt"></b><u>Breyta</u></button>' +
+      '<div class="dr-row"><span>Venjulegt verð</span><b id="as-full"></b></div>' +
+      '<div class="dr-row"><span id="as-offl">Áskriftarafsláttur</span><b class="save" id="as-off"></b></div>' +
+      '<p class="as-perks"><span>' + ICON.check + 'Frí heimsending</span><span>' + ICON.check + 'Hristibrúsi að gjöf</span></p>' +
+      '<div class="as-pay"><span>Þú greiðir</span><strong id="as-pay">0 kr.</strong><small id="as-per"></small></div>' +
+      '<p class="as-save" id="as-save"></p>' +
+      '<button class="btn red wide" type="button" id="as-go" disabled>Setja áskrift í körfu</button><p class="as-fine">Greitt við hverja sendingu. Enginn binditími.</p>';
     function lines() { return Object.keys(box).filter(function (h) { return box[h].q > 0; }).map(function (h) { return { h: h, vi: box[h].vi, q: box[h].q }; }); }
+    function samePreset(ls, i) { var pl = preLines[i]; return ls.length === pl.length && pl.every(function (l) { return box[l.h] && box[l.h].vi === l.vi && box[l.h].q === 1; }); }
     function paint() {
+      var ls = lines(), m = boxMath(ls, wk), n = ls.reduce(function (a, l) { return a + l.q; }, 0);
       $$('.ab', grid).forEach(function (el) {
         var h = el.dataset.h, p = byH[h], b = box[h], vi = b ? b.vi : +(($('.av', el) || {}).value || bestV(p)), v = p.v[vi], q = b ? b.q : 0;
         $('[data-abp]', el).innerHTML = '<s>' + kr(v.price) + '</s> ' + kr(Math.round(v.price * (1 - SUB.base))) + ' <small>í áskrift</small>';
-        $('[data-aba]', el).innerHTML = !v.avail ? '<button class="bk" type="button" disabled>Uppselt</button>' : q ?
-          '<div class="qty"><button type="button" data-abq="-1" aria-label="Fækka: ' + esc(p.t) + '">' + ICON.minus + '</button><span>' + q + ' í boxinu</span><button type="button" data-abq="1" aria-label="Fjölga: ' + esc(p.t) + '">' + ICON.plus + '</button></div>' :
-          '<button class="bk" type="button" data-abq="1">Bæta í boxið ' + ICON.plus + '</button>';
+        var aba = $('[data-aba]', el), want = !v.avail ? 'out' : q ? 'q' + q : 'add';
+        if (aba.dataset.s !== want) {
+          aba.dataset.s = want;
+          aba.innerHTML = !v.avail ? '<button class="bk" type="button" disabled>Uppselt</button>' : q ?
+            '<div class="qty"><button type="button" data-abq="-1" aria-label="Fækka: ' + esc(p.t) + '">' + ICON.minus + '</button><span>' + q + ' í boxinu</span><button type="button" data-abq="1" aria-label="Fjölga: ' + esc(p.t) + '">' + ICON.plus + '</button></div>' :
+            '<button class="bk" type="button" data-abq="1">Bæta í boxið ' + ICON.plus + '</button>';
+        }
         el.classList.toggle('in', q > 0);
       });
-      var ls = lines(), m = boxMath(ls, wk);
-      sum.innerHTML = '<p class="lbl">Boxið þitt</p>' + (ls.length ? '<ul class="as-l">' + ls.map(function (l) { var p = byH[l.h], v = p.v[l.vi]; return '<li><span>' + l.q + ' × ' + esc(p.t) + (many(p) ? '<small>' + esc(v.t) + '</small>' : '') + '</span><b>' + kr(v.price * l.q) + '</b></li>'; }).join('') + '</ul>' : '<p class="as-empty">Veldu vörur eða byrjaðu á tilbúnu boxi.</p>') +
-        '<label class="as-iv"><span>Sending</span><select id="as-iv">' + Object.keys(SUB.iv).map(function (k) { return '<option value="' + k + '"' + (+k === wk ? ' selected' : '') + '>' + SUB.iv[k] + '</option>'; }).join('') + '</select></label>' +
-        '<div class="dr-row"><span>Venjulegt verð</span><b>' + kr(m.full) + '</b></div>' +
-        '<div class="dr-row"><span>Áskriftarafsláttur ' + pct(m.rate) + '</span><b class="save">−' + kr(m.off) + '</b></div>' +
-        '<div class="dr-row"><span>Heimsending</span><b class="save">Frí</b></div>' +
-        '<div class="dr-row"><span>Gjöf í fyrstu sendingu</span><b>Weider hristibrúsi</b></div>' +
-        '<div class="as-pay"><span>Þú greiðir</span><strong>' + kr(m.pay) + '</strong><small>' + SUB.iv[wk].toLowerCase() + '</small></div>' +
-        (m.full ? '<p class="as-save">Þú sparar <b>' + kr(m.perYear) + '</b> á ári, auk sendingarkostnaðar.</p>' : '') +
-        (m.full && !m.ok ? '<p class="dr-hint">Lágmark í áskrift er ' + kr(SUB.min) + '. Bættu við ' + kr(SUB.min - m.full) + '.</p>' : m.full && m.rate < SUB.tier ? '<p class="dr-hint">Bættu ' + kr(SUB.tierAt - m.full) + ' við og fáðu 15% af öllu boxinu.</p>' : '') +
-        '<button class="btn red wide" type="button" id="as-go"' + (m.ok ? '' : ' disabled') + '>Setja áskrift í körfu</button><p class="as-fine">Greitt við hverja sendingu. Enginn binditími.</p>';
+      $$('.preset').forEach(function (c, i) { var on = samePreset(ls, i); c.classList.toggle('on', on); $('.pre-go', c).innerHTML = on ? ICON.check + 'Valið' : 'Velja þetta box'; $('.pre-go', c).setAttribute('aria-pressed', on); });
+      // lines
+      var keys = {};
+      $('#as-l').innerHTML = ls.map(function (l) {
+        var p = byH[l.h], v = p.v[l.vi]; keys[l.h] = 1;
+        return '<li data-k="' + l.h + '"><span class="as-th"><img src="' + variantSrc(p, l.vi) + '" alt="" width="60" height="80" loading="lazy"></span><span class="as-nm">' + (l.q > 1 ? l.q + ' × ' : '') + esc(short(p)) + (many(p) ? '<small>' + esc(v.t) + '</small>' : '') + '</span><b>' + kr(v.price * l.q) + '</b><button type="button" class="as-x" data-rm="' + l.h + '" aria-label="Taka úr boxinu: ' + esc(p.t) + '">' + ICON.minus + '</button></li>';
+      }).join('');
+      if (anim()) $$('#as-l li').forEach(function (li) { if (!prevKeys[li.dataset.k]) G.from(li, { opacity: 0, x: 18, duration: .5, ease: 'power3.out', clearProps: 'all' }); });
+      prevKeys = keys;
+      $('#as-empty').hidden = !!ls.length;
+      $('#as-c').textContent = n ? n + (n === 1 ? ' vara' : ' vörur') : '';
+      // meter: minimum, then the 15% tier
+      var fill = $('#as-fill'), mt = $('#as-mt');
+      fill.style.transform = 'scaleX(' + Math.min(1, m.full / SUB.tierAt).toFixed(3) + ')';
+      $('#as-m').className = 'as-m ' + (!m.full ? 'is-empty' : !m.ok ? 'is-low' : m.rate < SUB.tier ? 'is-ok' : 'is-top');
+      mt.innerHTML = !m.full ? 'Lágmark ' + kr(SUB.min) + '. 15% afsláttur þegar boxið nær ' + kr(SUB.tierAt) + '.' :
+        !m.ok ? 'Bættu við <b>' + kr(SUB.min - m.full) + '</b> til að ná lágmarkinu.' :
+        m.rate < SUB.tier ? 'Bættu við <b>' + kr(SUB.tierAt - m.full) + '</b> og fáðu 15% af öllu boxinu.' : ICON.check + '<b>15% afsláttur</b> af öllu boxinu.';
+      $('#as-ivt').textContent = SUB.iv[wk];
+      $('#as-full').textContent = kr(m.full);
+      $('#as-offl').textContent = 'Áskriftarafsláttur ' + pct(m.rate);
+      $('#as-off').textContent = '−' + kr(m.off);
+      $('#as-per').textContent = 'á hverja sendingu · ' + SUB.iv[wk].toLowerCase();
+      $('#as-save').innerHTML = m.full ? 'Þú sparar <b>' + kr(m.perYear) + '</b> á ári, auk sendingarkostnaðar.' : '';
+      $('#as-go').disabled = !m.ok;
+      var payEl = $('#as-pay');
+      if (payTw) payTw.kill();
+      if (anim() && lastPay !== m.pay) { var o = { v: lastPay }; payTw = G.to(o, { v: m.pay, duration: .7, ease: 'power3.out', onUpdate: function () { payEl.textContent = kr(Math.round(o.v)); } }); }
+      else payEl.textContent = kr(m.pay);
+      lastPay = m.pay;
+      // frequency cards show what each choice saves for this box
+      $$('[data-wk]', ivEl).forEach(function (b) { var k = +b.dataset.wk, on = k === wk; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; $('[data-ivs]', b).textContent = m.full ? 'Sparar ' + kr(boxMath(ls, k).perYear) + ' á ári' : (k === 4 ? 'Algengast' : k === 6 ? 'Fyrir hóflega notkun' : 'Fyrir minni skammta'); });
+      // step nav + phone bar
+      $('#ax-mini').textContent = n ? kr(m.pay) + ' · ' + n + (n === 1 ? ' vara' : ' vörur') : 'Tómt box';
+      $('#axb-t').textContent = kr(m.pay); $('#axb-c').textContent = n + (n === 1 ? ' vara' : ' vörur') + ' · ' + SUB.iv[wk].toLowerCase();
+      barState();
     }
+    function jump(id) { var t = document.getElementById(id); if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
+    function setMode(md, focus) {
+      var tl = $('.ax-mode'); tl.dataset.mode = md;
+      $$('[role="tab"]', tl).forEach(function (t) { var on = t.dataset.mode === md; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; if (on && focus) t.focus(); });
+      var show = md === 'own' ? $('#ax-own') : $('#ask-presets'), hide = md === 'own' ? $('#ask-presets') : $('#ax-own');
+      hide.hidden = true; show.hidden = false;
+      if (anim()) G.fromTo(md === 'own' ? $$('.ab:not([hidden])', grid) : $$('.preset'), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .55, stagger: { amount: .25 }, ease: 'power3.out', clearProps: 'transform' });
+      if (ST) ST.refresh();
+    }
+    function load(i) { box = {}; preLines[i].forEach(function (l) { box[l.h] = { vi: l.vi, q: 1 }; var s2 = $('#av-' + l.h); if (s2) s2.value = l.vi; }); paint(); }
+    $('.ax-mode').addEventListener('click', function (e) { var t = e.target.closest('[data-mode]'); if (t) setMode(t.dataset.mode); });
+    $('.ax-mode').addEventListener('keydown', function (e) { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); setMode($('.ax-mode').dataset.mode === 'own' ? 'ready' : 'own', true); } });
+    $('#ask-presets').addEventListener('click', function (e) {
+      var c = e.target.closest('[data-pre]'); if (!c) return; load(+c.dataset.pre);
+      if (e.target.closest('[data-edit]')) { setMode('own'); jump('skref-1'); }
+    });
+    $('#ax-cats').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-cat]'); if (!b || b.dataset.cat === cat) return; cat = b.dataset.cat;
+      $$('[data-cat]', $('#ax-cats')).forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+      var vis = []; $$('.ab', grid).forEach(function (el) { el.hidden = cat !== 'all' && el.dataset.cat !== cat; if (!el.hidden) vis.push(el); });
+      if (anim()) G.fromTo(vis, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .45, stagger: { amount: .2 }, ease: 'power3.out', clearProps: 'transform' });
+      if (ST) ST.refresh();
+    });
     grid.addEventListener('click', function (e) {
       var t = e.target.closest('[data-abq]'); if (!t) return;
       var el = t.closest('.ab'), h = el.dataset.h, sel = $('.av', el), b = box[h] || (box[h] = { vi: sel ? +sel.value : bestV(byH[h]), q: 0 });
@@ -666,19 +764,38 @@
       paint(); var again = $('[data-abq="' + t.dataset.abq + '"]', el) || $('[data-abq]', el); if (again) again.focus({ preventScroll: true });
     });
     grid.addEventListener('change', function (e) { var s2 = e.target.closest('.av'); if (!s2) return; if (box[s2.dataset.h]) box[s2.dataset.h].vi = +s2.value; paint(); });
-    sum.addEventListener('change', function (e) { if (e.target.id === 'as-iv') { wk = +e.target.value; paint(); } });
+    ivEl.addEventListener('click', function (e) { var b = e.target.closest('[data-wk]'); if (!b) return; wk = +b.dataset.wk; paint(); });
+    ivEl.addEventListener('keydown', function (e) {
+      var ks = Object.keys(SUB.iv).map(Number), i = ks.indexOf(wk), d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (!d) return; e.preventDefault(); wk = ks[(i + d + ks.length) % ks.length]; paint(); $('[data-wk="' + wk + '"]', ivEl).focus();
+    });
     sum.addEventListener('click', function (e) {
+      var rm = e.target.closest('[data-rm]'); if (rm) { delete box[rm.dataset.rm]; paint(); return; }
       if (e.target.closest('#as-go')) { lines().forEach(function (l) { add(l.h, byH[l.h].v[l.vi].t, l.q, wk); }); openCart({ currentTarget: e.target.closest('#as-go'), detail: e.detail }); }
     });
-    $('#ask-presets').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-pre]'); if (!b) return; box = {};
-      PRESETS[+b.dataset.pre][2].forEach(function (x) { box[x[0]] = { vi: bestV(byH[x[0]], x[1]), q: 1 }; var s2 = $('#av-' + x[0]); if (s2) s2.value = box[x[0]].vi; });
-      $$('.preset').forEach(function (x) { x.classList.toggle('on', x === b); }); paint();
-      if (innerWidth <= 900) $('#ask-sum').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    });
+    document.addEventListener('click', function (e) { var a = e.target.closest('[data-jump]'); if (!a) return; e.preventDefault(); jump(a.dataset.jump); });
+    // where am I: step nav follows the scroll; the phone bar steps forward
+    var cur = '', sumIn = false, s2el = document.getElementById('skref-2'), tick = 0;
+    function whereAmI() {
+      tick = 0; var mid = innerHeight * .45, r2 = s2el.getBoundingClientRect(), c;
+      if (innerWidth > 1100) c = r2.bottom < mid ? 'ask-sum' : r2.top < mid ? 'skref-2' : 'skref-1';
+      else c = sum.getBoundingClientRect().top < mid ? 'ask-sum' : r2.top < mid ? 'skref-2' : 'skref-1';
+      if (c === cur) return; cur = c;
+      $$('.ax-steps [data-step]').forEach(function (a) { var on = a.dataset.step === cur; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current'); });
+    }
+    addEventListener('scroll', function () { if (!tick) tick = requestAnimationFrame(whereAmI); }, { passive: true });
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { sumIn = es[0].isIntersecting; barState(); }, { rootMargin: '0px 0px -20% 0px' }).observe(sum);
+    var bar = $('#ax-bar');
+    function barState() {
+      if (!bar) return; var show = innerWidth <= 1100 && lines().length > 0 && !sumIn;
+      if (bar.hidden === !show) return; bar.hidden = !show;
+      if (show && anim()) G.fromTo(bar, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: .45, ease: 'power3.out', clearProps: 'all' });
+    }
+    $('#axb-go').addEventListener('click', function () { jump(cur === 'skref-1' ? 'skref-2' : 'ask-sum'); });
+    addEventListener('resize', barState, { passive: true });
     $('.faq').addEventListener('click', function (e) { var a = e.target.closest('.acc-b'); if (!a) return; var open = a.getAttribute('aria-expanded') !== 'true'; a.setAttribute('aria-expanded', open); document.getElementById(a.getAttribute('aria-controls')).classList.toggle('open', open); });
-    paint();
-    reveals('.ask-how li, .ab, .faq .acc-i');
+    paint(); whereAmI();
+    reveals('.preset, .ax-iv button, .ask-how li, .faq .acc-i');
   }
   function askTeaser() {
     var el = $('#ask-teaser'); if (!el) return;

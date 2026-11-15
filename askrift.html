@@ -11,9 +11,9 @@
 <link rel="preload" href="assets/fonts/Stardom-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/CabinetGrotesk-Medium.woff2" as="font" type="font/woff2" crossorigin>
 <script>(function(){var r=document.documentElement;r.classList.add('js');function s(v){if(r.getAttribute('data-input')!==v)r.setAttribute('data-input',v)}addEventListener('pointerdown',function(){s('pointer')},true);addEventListener('keydown',function(e){if(e.key==='Shift'||e.key==='Control'||e.key==='Alt'||e.key==='Meta')return;s('key')},true)})();</script>
-<script src="assets/vendor/focus-guard.js?v=fc98a14"></script>
-<link rel="stylesheet" href="assets/vendor/focus-guard.css?v=fc98a14">
-<link rel="stylesheet" href="assets/site.css?v=fc98a14">
+<script src="assets/vendor/focus-guard.js?v=658135f"></script>
+<link rel="stylesheet" href="assets/vendor/focus-guard.css?v=658135f">
+<link rel="stylesheet" href="assets/site.css?v=658135f">
 
 <title>Áskrift · Weider á Íslandi</title>
 <meta name="description" content="Weider Áskrift: 10–15% afsláttur, frí heimsending og hristibrúsi í fyrstu sendingu. Greitt við hverja sendingu, enginn binditími.">
@@ -21,7 +21,7 @@
 <body class="ask">
 <a class="skip" href="#main">Hoppa í efni</a>
 <header class="hdr" id="hdr">
-  <a class="logo" href="index.html" aria-label="Weider, forsíða"><span class="logo-in"><img src="assets/logo/weider-white.webp?v=fc98a14" alt="Weider" width="2400" height="565"></span></a>
+  <a class="logo" href="index.html" aria-label="Weider, forsíða"><span class="logo-in"><img src="assets/logo/weider-white.webp?v=658135f" alt="Weider" width="2400" height="565"></span></a>
   <nav class="pills" aria-label="Aðalvalmynd">
     <button class="shop-btn" type="button" aria-expanded="false" aria-controls="mega">Verslun <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
     <a href="vorur.html?c=protein" data-nav="protein">Prótein</a>
@@ -63,28 +63,57 @@
   <p class="mnav-f">Sending með Dropp á 1–2 virkum dögum</p>
 </div>
 
-<main id="main">
-  <div class="top ask-top">
-    <div><p class="lbl">Weider Áskrift</p><h1 class="h1">Áskrift</h1></div>
-    <p class="ask-lead">Settu saman þitt box einu sinni. Það kemur heim að dyrum á þeim tíma sem hentar, ódýrara en í stakri sölu og alltaf án sendingarkostnaðar.</p>
-  </div>
-  <div class="sheet">
-    <ol class="ask-how" aria-label="Svona virkar þetta">
-      <li><span>01</span><b>Veldu vörurnar</b><p>Byrjaðu á tilbúnu boxi eða raðaðu þínu eigin. Lágmark 5.990 kr.</p></li>
-      <li><span>02</span><b>Veldu tíðni</b><p>Mánaðarlega, á 6 vikna fresti eða á 2 mánaða fresti.</p></li>
-      <li><span>03</span><b>Við sendum heim</b><p>Frí heimsending með Dropp. 10% afsláttur, 15% þegar boxið nær 15.000 kr.</p></li>
-      <li><span>04</span><b>Þú ræður ferðinni</b><p>Sleppa sendingu, fresta, breyta eða hætta hvenær sem er. Enginn binditími.</p></li>
-    </ol>
-    <div class="ask-build">
-      <div class="ask-main">
-        <h2 class="h2">Tilbúin box</h2>
-        <div class="presets" id="ask-presets"></div>
-        <h2 class="h2 ask-h2">Eða raðaðu þínu eigin</h2>
-        <div class="grid ask-grid" id="ask-grid"></div>
-      </div>
-      <aside class="ask-sum" id="ask-sum" aria-live="polite"></aside>
+<main id="main" class="ax">
+  <section class="ax-hero">
+    <div class="ax-hero-t">
+      <p class="lbl">Weider Áskrift</p>
+      <h1 class="h1">Áskrift sem <em>borgar sig.</em></h1>
+      <p class="ax-lead">Veldu boxið og hversu oft það á að koma. Það kemur heim að dyrum, 10–15% ódýrara en í stakri sölu og alltaf án sendingarkostnaðar.</p>
+      <div class="ax-cta"><a class="btn red" href="#skref-1" data-jump="skref-1">Setja saman box <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a><a class="btn ghost" href="#spurt" data-jump="spurt">Spurt og svarað</a></div>
+      <ul class="ax-perks">
+        <li><strong>10–15%</strong><span>afsláttur af hverri sendingu</span></li>
+        <li><strong>0 kr.</strong><span>heimsending með Dropp</span></li>
+        <li><strong>Gjöf</strong><span>hristibrúsi í fyrsta boxinu</span></li>
+        <li><strong>Enginn</strong><span>binditími, hættu hvenær sem er</span></li>
+      </ul>
     </div>
-    <section class="faq" aria-labelledby="faq-t">
+    <div class="ax-hv" id="ax-hv" aria-hidden="true"></div>
+  </section>
+  <div class="sheet ax-sheet">
+    <nav class="ax-steps" aria-label="Skref í áskrift">
+      <a href="#skref-1" data-jump="skref-1" data-step="skref-1"><i>1</i><span>Boxið</span></a>
+      <a href="#skref-2" data-jump="skref-2" data-step="skref-2"><i>2</i><span>Tíðni</span></a>
+      <a href="#ask-sum" data-jump="ask-sum" data-step="ask-sum"><i>3</i><span>Staðfesta</span></a>
+      <b class="ax-mini" id="ax-mini" aria-live="off">0 kr.</b>
+    </nav>
+    <div class="ask-build">
+      <div class="ax-main">
+        <section class="ax-step" id="skref-1" aria-labelledby="s1-t">
+          <header class="ax-sh"><span class="ax-n">01</span><div><h2 class="h2" id="s1-t">Veldu boxið</h2><p>Byrjaðu á tilbúnu boxi eða raðaðu þínu eigin. Lágmark í hverri sendingu er 5.990 kr.</p></div></header>
+          <div class="ax-mode" role="tablist" aria-label="Hvernig viltu byrja?" data-mode="ready">
+            <button type="button" role="tab" id="t-ready" aria-controls="ask-presets" aria-selected="true" data-mode="ready">Tilbúin box</button>
+            <button type="button" role="tab" id="t-own" aria-controls="ax-own" aria-selected="false" data-mode="own" tabindex="-1">Raða sjálf/ur</button>
+          </div>
+          <div class="presets" id="ask-presets" role="tabpanel" aria-labelledby="t-ready"></div>
+          <div class="ax-own" id="ax-own" role="tabpanel" aria-labelledby="t-own" hidden>
+            <div class="ax-cats" id="ax-cats" aria-label="Flokkar"></div>
+            <div class="grid ask-grid" id="ask-grid"></div>
+          </div>
+        </section>
+        <section class="ax-step" id="skref-2" aria-labelledby="s2-t">
+          <header class="ax-sh"><span class="ax-n">02</span><div><h2 class="h2" id="s2-t">Hversu oft?</h2><p>Þú færð áminningu þremur dögum fyrir hverja sendingu og getur sleppt, frestað eða breytt.</p></div></header>
+          <div class="ax-iv" id="ax-iv" role="radiogroup" aria-labelledby="s2-t"></div>
+        </section>
+      </div>
+      <aside class="ask-sum" id="ask-sum" aria-label="Boxið þitt"></aside>
+    </div>
+    <ol class="ask-how" aria-label="Svona virkar þetta">
+      <li><span>01</span><b>Veldu vörurnar</b><p>Tilbúið box eða þitt eigið. Lágmark 5.990 kr.</p></li>
+      <li><span>02</span><b>Veldu tíðni</b><p>Mánaðarlega, á 6 vikna eða 2 mánaða fresti.</p></li>
+      <li><span>03</span><b>Kemur heim</b><p>Frí heimsending með Dropp. Greitt við hverja sendingu.</p></li>
+      <li><span>04</span><b>Þú ræður</b><p>Sleppa, fresta, breyta eða hætta. Enginn binditími.</p></li>
+    </ol>
+    <section class="faq" id="spurt" aria-labelledby="faq-t">
       <h2 class="h2" id="faq-t">Spurt og svarað</h2>
       <div class="acc">
         <div class="acc-i"><button class="acc-b" type="button" aria-expanded="false" aria-controls="f1">Hvernig er greitt?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><div class="acc-p" id="f1"><div><div class="acc-in"><p>Þú greiðir við hverja sendingu, ekkert fyrirfram. Kortið er skuldfært þegar boxið fer af stað.</p></div></div></div></div>
@@ -94,6 +123,7 @@
       </div>
     </section>
   </div>
+  <div class="ax-bar" id="ax-bar" hidden><span><b id="axb-t">0 kr.</b><small id="axb-c"></small></span><button type="button" class="btn red" id="axb-go">Áfram</button></div>
 </main>
 <footer class="ftr">
   <div class="ftr-top">
@@ -112,7 +142,7 @@
       <div><p class="lbl">Þjónusta</p><span>Sending með Dropp, 1–2 virkir dagar</span><span>14 daga skilaréttur</span><a href="tel:+3547700295">770 0295</a><a href="mailto:weidervorur@gmail.com">weidervorur@gmail.com</a></div>
     </nav>
   </div>
-  <img class="ftr-logo" src="assets/logo/weider-white.webp?v=fc98a14" alt="" width="2400" height="565" loading="lazy">
+  <img class="ftr-logo" src="assets/logo/weider-white.webp?v=658135f" alt="" width="2400" height="565" loading="lazy">
   <div class="ftr-legal"><span>Aura ehf. · kt. 560925-0500 · VSK 158878 · Austurkór 65, 203 Kópavogur</span><span>Frumgerð frá SNDR Studio · ekkert er selt hér</span></div>
 </footer>
 <div class="scrim" hidden></div>
@@ -121,10 +151,10 @@
   <div class="dr-list"></div>
   <div class="dr-f"><div class="dr-rows"></div><div class="dr-sum"><span>Samtals</span><strong class="dr-total">0 kr.</strong></div><p class="dr-note">Sending reiknast í næsta skrefi.</p><button class="btn red wide dr-go" type="button">Áfram í greiðslu</button><p class="dr-msg" role="status" aria-live="polite"></p></div>
 </aside>
-<script src="assets/vendor/gsap.min.js?v=fc98a14" defer></script>
-<script src="assets/vendor/ScrollTrigger.min.js?v=fc98a14" defer></script>
-<script src="assets/data.js?v=fc98a14" defer></script>
-<script src="assets/site.js?v=fc98a14" defer></script>
+<script src="assets/vendor/gsap.min.js?v=658135f" defer></script>
+<script src="assets/vendor/ScrollTrigger.min.js?v=658135f" defer></script>
+<script src="assets/data.js?v=658135f" defer></script>
+<script src="assets/site.js?v=658135f" defer></script>
 
 </body>
 </html>

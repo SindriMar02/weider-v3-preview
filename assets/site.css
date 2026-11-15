@@ -201,7 +201,7 @@ ul { padding: 0; list-style: none; }
 .deal-tile { position: relative; overflow: hidden; border-radius: var(--r-card); background: var(--red); color: #fff; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; min-height: 300px; }
 .deal-tile .lbl { color: rgba(255,255,255,.8); }
 .deal-tile .h2 { font-size: clamp(40px, 4vw, 60px); margin-top: auto; margin-bottom: 24px; }
-.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=9c35091) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=9c35091) no-repeat center / contain; pointer-events: none; }
+.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=c4dcf5b) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=c4dcf5b) no-repeat center / contain; pointer-events: none; }
 @media (max-width: 760px) { .deal-tile::before { left: auto; right: 18px; top: 50%; transform: translateY(-50%); width: 32%; } }
 .deal-arrows { display: flex; gap: 8px; }
 .arr { width: 46px; height: 46px; border-radius: 999px; display: grid; place-items: center; background: rgba(255,255,255,.16); color: #fff; transition: background-color .25s, opacity .25s; }
@@ -834,3 +834,16 @@ html.logo-off .logo-in { opacity: 0 !important; transition: opacity .25s; }
 
 .ask-top .lbl { margin-bottom: 26px; }
 .ask-top .h1 { line-height: 1; }
+
+/* ============ LAG PURGE (15 Nov) ============ */
+/* backdrop blur re-renders every frame when content moves beneath it (worst on iOS): solid tints instead */
+.hdr.solid { background: rgba(7,19,24,.95); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.pills { background: rgba(14,34,41,.94); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.hero-card { background: rgba(14,34,41,.88); -webkit-backdrop-filter: none; backdrop-filter: none; will-change: auto; }
+.stat { background: rgba(21,51,60,.94); -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* tall product columns: no permanent GPU layer (GSAP promotes them only while they move) */
+.col { will-change: auto; }
+/* shop: reserve the space the script fills, so nothing jumps after first paint (CLS was 0.30) */
+.goal-tabs { min-height: 51px; }
+#shop-grid { min-height: 120vh; }
+.hero-main img { will-change: transform; }

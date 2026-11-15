@@ -25,8 +25,9 @@
   var renderSrc = function (p, i) { return variantSrc(p, i); };
   function ph(p, big, lazy) {
     var photo = hasPhoto(p);
-    return '<span class="ph"><img src="' + photoSrc(p, big) +
-      '" alt="' + esc(p.t) + '"' + (lazy === false ? '' : ' loading="lazy"') + ' decoding="async" width="600" height="800"></span>';
+    var base = 'assets/img/p/' + p.h, set = big ? '' : ' srcset="' + base + '-400.webp 400w, ' + base + '-600.webp 600w" sizes="(max-width: 760px) 46vw, (max-width: 1100px) 30vw, 300px"';
+    return '<span class="ph"><img src="' + photoSrc(p, big) + '"' + set +
+      ' alt="' + esc(p.t) + '"' + (lazy === false ? '' : ' loading="lazy"') + ' decoding="async" width="600" height="800"></span>';
   }
   var many = function (p) { return p.v.length > 1; };
   var ranged = function (p) { return p.v.some(function (v) { return v.price !== p.price; }); };
@@ -201,13 +202,14 @@
     if (refocus && mega.contains(document.activeElement)) shopBtn.focus({ preventScroll: true });
   }
   if (mega && shopBtn) {
-    $('.mega-grid', mega).innerHTML = CATS.map(function (c) { return c.k; }).concat(['all']).map(function (k) {
+    var megaBuilt = false, buildMega = function () { if (megaBuilt) return; megaBuilt = true; $('.mega-grid', mega).innerHTML = CATS.map(function (c) { return c.k; }).concat(['all']).map(function (k) {
       var p = byH[CAT_IMG[k]], href = k === 'all' ? 'vorur.html' : 'vorur.html?c=' + k;
       return '<a class="mega-c" href="' + href + '">' + ph(p) + '<span><b>' + esc(k === 'all' ? 'Allar vörur' : catLabel[k]) + '</b><span class="n">' + nVara(countIn(k)) + '</span></span></a>';
-    }).join('');
+    }).join(''); };
+    shopBtn.addEventListener('pointerenter', buildMega, { once: true });
     shopBtn.addEventListener('click', function (e) {
       if (!mega.hidden && shopBtn.getAttribute('aria-expanded') === 'true') { closeMega(); return; }
-      closeCart(); mega.hidden = false; shopBtn.setAttribute('aria-expanded', 'true'); logoOff(true);
+      buildMega(); closeCart(); mega.hidden = false; shopBtn.setAttribute('aria-expanded', 'true'); logoOff(true);
       if (G && !reduce) {
         G.fromTo(mega, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: .35, ease: 'power3.out', overwrite: true });
         G.fromTo($$('.mega-c', mega), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .45, stagger: .03, ease: 'power3.out' });
@@ -571,17 +573,22 @@
       var r = rect();
       var tl = G.timeline({ onComplete: function () {
         settled = true; settle();
-        G.to(img, { scale: 1.06, duration: 11, ease: 'sine.inOut', yoyo: true, repeat: -1 }); // hold with a slow drift (video)
-        cards.forEach(function (c, i) { G.to(c, { y: i ? 9 : -9, duration: 3.8 + i * .7, ease: 'sine.inOut', yoyo: true, repeat: -1 }); }); // floating
+        var loops = [G.to(img, { scale: 1.06, duration: 11, ease: 'sine.inOut', yoyo: true, repeat: -1 })]; // hold with a slow drift (video)
+        cards.forEach(function (c, i) { loops.push(G.to(c, { y: i ? 9 : -9, duration: 3.8 + i * .7, ease: 'sine.inOut', yoyo: true, repeat: -1 })); }); // floating
+        // lag purge: the loops only run while the hero is on screen (and the tab is visible)
+        var onScreen = true, setLoops = function () { loops.forEach(function (t) { onScreen && !document.hidden ? t.resume() : t.pause(); }); };
+        if (ST) ST.create({ trigger: hero, start: 'top bottom', end: 'bottom top', onToggle: function (self) { onScreen = self.isActive; setLoops(); } });
+        document.addEventListener('visibilitychange', setLoops);
       } });
-      tl.to(img, { scale: 1.08, duration: 1.6, ease: 'power2.out' }, 0)
-        .to(logoIn, { opacity: 1, y: 0, duration: 1.3, ease: 'power4.out' }, .25)
-        .to(main, Object.assign({ duration: 1.5, ease: 'expo.inOut' }, r), 1.05)
-        .to(img, { scale: 1, duration: 1.5, ease: 'expo.inOut' }, 1.05)
-        .to(cards, { y: 0, rotate: 0, duration: 1.4, stagger: .14, ease: 'power3.out' }, 1.75)
-        .to(cards, { autoAlpha: 1, duration: .5, stagger: .14, ease: 'power1.out' }, 1.75)
-        .to(chrome, { opacity: 1, duration: .8, ease: 'power2.out', clearProps: 'opacity' }, 1.9)
-        .to(ui, { opacity: 1, y: 0, duration: .9, stagger: .09, ease: 'power3.out' }, 2.05);
+      // lag purge 15 Nov: same order, ~1 s shorter (settled by ~2.6 s instead of ~3.6 s)
+      tl.to(img, { scale: 1.08, duration: 1.3, ease: 'power2.out' }, 0)
+        .to(logoIn, { opacity: 1, y: 0, duration: 1.1, ease: 'power4.out' }, .15)
+        .to(main, Object.assign({ duration: 1.3, ease: 'expo.inOut' }, r), .7)
+        .to(img, { scale: 1, duration: 1.3, ease: 'expo.inOut' }, .7)
+        .to(cards, { y: 0, rotate: 0, duration: 1.15, stagger: .12, ease: 'power3.out' }, 1.4)
+        .to(cards, { autoAlpha: 1, duration: .45, stagger: .12, ease: 'power1.out' }, 1.4)
+        .to(chrome, { opacity: 1, duration: .7, ease: 'power2.out', clearProps: 'opacity' }, 1.2)
+        .to(ui, { opacity: 1, y: 0, duration: .8, stagger: .08, ease: 'power3.out' }, 1.3);
     });
     // pointer parallax on the floating cards (mouse only)
     if (matchMedia('(hover: hover) and (pointer: fine)').matches) {

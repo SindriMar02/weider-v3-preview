@@ -11,9 +11,9 @@
 <link rel="preload" href="assets/fonts/Stardom-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/CabinetGrotesk-Medium.woff2" as="font" type="font/woff2" crossorigin>
 <script>(function(){var r=document.documentElement;r.classList.add('js');function s(v){if(r.getAttribute('data-input')!==v)r.setAttribute('data-input',v)}addEventListener('pointerdown',function(){s('pointer')},true);addEventListener('keydown',function(e){if(e.key==='Shift'||e.key==='Control'||e.key==='Alt'||e.key==='Meta')return;s('key')},true)})();</script>
-<script src="assets/vendor/focus-guard.js?v=c9cf724"></script>
-<link rel="stylesheet" href="assets/vendor/focus-guard.css?v=c9cf724">
-<link rel="stylesheet" href="assets/site.css?v=c9cf724">
+<script src="assets/vendor/focus-guard.js?v=9c35091"></script>
+<link rel="stylesheet" href="assets/vendor/focus-guard.css?v=9c35091">
+<link rel="stylesheet" href="assets/site.css?v=9c35091">
 
 <title>Vara · Weider á Íslandi</title>
 <meta name="description" content="Weider vara.">
@@ -21,13 +21,13 @@
 <body class="product">
 <a class="skip" href="#main">Hoppa í efni</a>
 <header class="hdr" id="hdr">
-  <a class="logo" href="index.html" aria-label="Weider, forsíða"><span class="logo-in"><img src="assets/logo/weider-white.webp?v=c9cf724" alt="Weider" width="2400" height="565"></span></a>
+  <a class="logo" href="index.html" aria-label="Weider, forsíða"><span class="logo-in"><img src="assets/logo/weider-white.webp?v=9c35091" alt="Weider" width="2400" height="565"></span></a>
   <nav class="pills" aria-label="Aðalvalmynd">
     <button class="shop-btn" type="button" aria-expanded="false" aria-controls="mega">Verslun <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
     <a href="vorur.html?c=protein" data-nav="protein">Prótein</a>
     <a href="vorur.html?c=kreatin" data-nav="kreatin">Kreatín</a>
     <a href="vorur.html?c=pre" data-nav="pre">Pre-workout</a>
-    <a href="vorur.html?c=vitamin" data-nav="vitamin">Vítamín</a>
+    <a href="askrift.html" data-nav="askrift" class="pill-ask">Áskrift <em>−15%</em></a>
   </nav>
   <div class="mega" id="mega" tabindex="-1" role="region" aria-label="Allir vöruflokkar" hidden>
     <div class="mega-grid"></div>
@@ -51,6 +51,7 @@
 <div class="mnav" id="mnav" tabindex="-1" role="dialog" aria-modal="true" aria-label="Valmynd" hidden>
   <nav aria-label="Valmynd">
     <a href="vorur.html">Allar vörur</a>
+    <a href="askrift.html">Áskrift</a>
     <a href="vorur.html?c=protein">Prótein</a>
     <a href="vorur.html?c=kreatin">Kreatín</a>
     <a href="vorur.html?c=pre">Pre-workout blöndur</a>
@@ -86,23 +87,23 @@
       </form>
     </div>
     <nav class="ftr-cols" aria-label="Fótur">
-      <div><p class="lbl">Verslun</p><a href="vorur.html?c=protein">Prótein</a><a href="vorur.html?c=kreatin">Kreatín</a><a href="vorur.html?c=pre">Pre-workout</a><a href="vorur.html?c=amino">Amínósýrur</a><a href="vorur.html?c=vitamin">Vítamín</a></div>
+      <div><p class="lbl">Verslun</p><a href="askrift.html">Áskrift</a><a href="vorur.html?c=protein">Prótein</a><a href="vorur.html?c=kreatin">Kreatín</a><a href="vorur.html?c=pre">Pre-workout</a><a href="vorur.html?c=amino">Amínósýrur</a><a href="vorur.html?c=vitamin">Vítamín</a></div>
       <div><p class="lbl">Þjónusta</p><span>Sending með Dropp, 1–2 virkir dagar</span><span>14 daga skilaréttur</span><a href="tel:+3547700295">770 0295</a><a href="mailto:weidervorur@gmail.com">weidervorur@gmail.com</a></div>
     </nav>
   </div>
-  <img class="ftr-logo" src="assets/logo/weider-white.webp?v=c9cf724" alt="" width="2400" height="565" loading="lazy">
+  <img class="ftr-logo" src="assets/logo/weider-white.webp?v=9c35091" alt="" width="2400" height="565" loading="lazy">
   <div class="ftr-legal"><span>Aura ehf. · kt. 560925-0500 · VSK 158878 · Austurkór 65, 203 Kópavogur</span><span>Frumgerð frá SNDR Studio · ekkert er selt hér</span></div>
 </footer>
 <div class="scrim" hidden></div>
 <aside class="drawer" id="cart" tabindex="-1" role="dialog" aria-modal="true" aria-label="Karfa" hidden>
   <div class="dr-h"><h2 class="h3">Karfan</h2><button class="x" type="button" aria-label="Loka körfu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="dr-list"></div>
-  <div class="dr-f"><div class="dr-sum"><span>Samtals</span><strong class="dr-total">0 kr.</strong></div><p class="dr-note">Sending reiknast í næsta skrefi.</p><button class="btn red wide dr-go" type="button">Áfram í greiðslu</button><p class="dr-msg" role="status" aria-live="polite"></p></div>
+  <div class="dr-f"><div class="dr-rows"></div><div class="dr-sum"><span>Samtals</span><strong class="dr-total">0 kr.</strong></div><p class="dr-note">Sending reiknast í næsta skrefi.</p><button class="btn red wide dr-go" type="button">Áfram í greiðslu</button><p class="dr-msg" role="status" aria-live="polite"></p></div>
 </aside>
-<script src="assets/vendor/gsap.min.js?v=c9cf724" defer></script>
-<script src="assets/vendor/ScrollTrigger.min.js?v=c9cf724" defer></script>
-<script src="assets/data.js?v=c9cf724" defer></script>
-<script src="assets/site.js?v=c9cf724" defer></script>
+<script src="assets/vendor/gsap.min.js?v=9c35091" defer></script>
+<script src="assets/vendor/ScrollTrigger.min.js?v=9c35091" defer></script>
+<script src="assets/data.js?v=9c35091" defer></script>
+<script src="assets/site.js?v=9c35091" defer></script>
 
 </body>
 </html>

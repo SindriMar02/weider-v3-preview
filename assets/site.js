@@ -18,12 +18,14 @@
   var PHOTO = ['premium-whey', 'micronized-creatine', 'total-rush', 'gold-whey', 'premium-creatin-watermelon', 'protein-80-plus',
     'premium-bcaa-8-1-1-l-glutamine-500gr', 'rush-pump-sauerkirsche', 'plant-based-protein', 'pure-creatine', 'premium-creatine-gummies',
     'rush-ready-to-drink', 'omega-3-superior', 'premium-hydration', 'whey-wafer', 'vitamin-d3-k2-kapseln', 'magnesium-gummi', 'ashwagandha-gummi'];
-  var hasPhoto = function (p) { return PHOTO.indexOf(p.h) > -1; };
+  // every product and every flavour variant now has its own photo on the one shared set (15 Nov)
+  var hasPhoto = function () { return true; };
   var photoSrc = function (p, big) { return 'assets/img/p/' + p.h + '-' + (big ? 1100 : 600) + '.webp'; };
-  var renderSrc = function (p, i) { var v = p.v[i]; return v && v.img ? v.img.replace('assets/img/v/', 'assets/img/t/') : 'assets/img/t/' + p.h + '.webp'; };
+  var variantSrc = function (p, i, big) { var v = p.v[i]; return 'assets/img/p/' + p.h + (v && v.img ? '--' + i : '') + '-' + (big ? 1100 : 600) + '.webp'; };
+  var renderSrc = function (p, i) { return variantSrc(p, i); };
   function ph(p, big, lazy) {
     var photo = hasPhoto(p);
-    return '<span class="ph' + (photo ? '' : ' render') + '"><img src="' + (photo ? photoSrc(p, big) : 'assets/img/t/' + p.h + '.webp') +
+    return '<span class="ph"><img src="' + photoSrc(p, big) +
       '" alt="' + esc(p.t) + '"' + (lazy === false ? '' : ' loading="lazy"') + ' decoding="async" width="600" height="800"></span>';
   }
   var many = function (p) { return p.v.length > 1; };
@@ -33,7 +35,8 @@
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
     minus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"/></svg>',
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>',
-    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    loop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg>'
   };
   function badge(p) {
     if (!p.avail) return '<span class="badge out">Uppselt</span>';
@@ -60,15 +63,21 @@
     .filter(function (i) { return byH[i.h] && i.q > 0; });
   function save() { try { localStorage.setItem('weider3-cart', JSON.stringify(cart)); } catch (e) {} }
   var count = function () { return cart.reduce(function (a, i) { return a + i.q; }, 0); };
-  function lineOf(h, vt) { return cart.filter(function (i) { return i.h === h && i.vt === vt; })[0]; }
-  function setQty(h, vt, q) {
-    var l = lineOf(h, vt);
-    if (!l && q > 0) cart.push({ h: h, vt: vt, q: Math.min(q, 20) });
+  /* Weider Áskrift: 10% off every subscription delivery, 15% once the delivery reaches 15.000 kr., free home delivery,
+     a Weider shaker in the first box, minimum box 5.990 kr. (keeps free shipping profitable). Paid per delivery, no lock-in. */
+  var SUB = { base: .10, tier: .15, tierAt: 15000, min: 5990, gift: 'weider-r-shaker', iv: { 4: 'Mánaðarlega', 6: 'Á 6 vikna fresti', 8: 'Á 2 mánaða fresti' } };
+  var subRate = function (t) { return t >= SUB.tierAt ? SUB.tier : SUB.base; };
+  var pct = function (r) { return Math.round(r * 100) + '%'; };
+  function lineOf(h, vt, sub) { sub = sub || 0; return cart.filter(function (i) { return i.h === h && i.vt === vt && (i.sub || 0) === sub; })[0]; }
+  function setQty(h, vt, q, sub) {
+    sub = sub || 0;
+    var l = lineOf(h, vt, sub);
+    if (!l && q > 0) cart.push({ h: h, vt: vt, q: Math.min(q, 20), sub: sub });
     else if (l && q <= 0) cart.splice(cart.indexOf(l), 1);
     else if (l) l.q = Math.min(q, 20);
     save(); syncCart();
   }
-  function add(h, vt, q) { var l = lineOf(h, vt); setQty(h, vt, (l ? l.q : 0) + (q || 1)); bump(); }
+  function add(h, vt, q, sub) { var l = lineOf(h, vt, sub); setQty(h, vt, (l ? l.q : 0) + (q || 1), sub); bump(); }
   function bump() { $$('.cart-n').forEach(function (n) { n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); }); }
 
   var drawer = $('#cart'), scrim = $('.scrim'), lastTrigger = null;
@@ -81,21 +90,32 @@
   }
   function renderCart() {
     if (!drawer) return;
-    var list = $('.dr-list', drawer), tot = 0;
+    var list = $('.dr-list', drawer), one = 0, subT = 0, subs = 0;
     if (!cart.length) {
       list.innerHTML = '<div class="empty"><p>Karfan er tóm.</p><a class="btn ghost" href="vorur.html">Skoða vörur</a></div>';
     } else {
       list.innerHTML = cart.map(function (l, i) {
-        var p = byH[l.h], vi = Math.max(0, p.v.map(function (v) { return v.t; }).indexOf(l.vt)), v = p.v[vi]; tot += v.price * l.q;
-        var photo = hasPhoto(p) && vi === p.pv;
-        return '<div class="line"><span class="ph' + (photo ? '' : ' render') + '"><img src="' + (photo ? photoSrc(p) : renderSrc(p, vi)) + '" alt="" width="72" height="96"></span>' +
+        var p = byH[l.h], vi = Math.max(0, p.v.map(function (v) { return v.t; }).indexOf(l.vt)), v = p.v[vi];
+        if (l.sub) { subT += v.price * l.q; subs++; } else one += v.price * l.q;
+        return '<div class="line"><span class="ph"><img src="' + variantSrc(p, vi) + '" alt="" width="72" height="96"></span>' +
           '<div><a class="line-n" href="vara.html?h=' + p.h + '">' + esc(p.t) + '</a>' + (many(p) ? '<div class="line-v">' + esc(l.vt) + '</div>' : '') +
+          (l.sub ? '<div class="line-sub">' + ICON.loop + ' Áskrift · ' + esc(SUB.iv[l.sub] || '') + '</div>' : '') +
           '<div class="qty"><button type="button" data-dq="' + i + '" aria-label="Fækka: ' + esc(p.t) + '">' + ICON.minus + '</button><span>' + l.q + '</span><button type="button" data-iq="' + i + '" aria-label="Fjölga: ' + esc(p.t) + '">' + ICON.plus + '</button></div></div>' +
           '<div><div class="line-p">' + kr(v.price * l.q) + '</div><button class="rm" type="button" data-rm="' + i + '">Fjarlægja</button></div></div>';
       }).join('');
     }
-    $('.dr-total', drawer).textContent = kr(tot);
-    $('.dr-go', drawer).disabled = !cart.length;
+    var rate = subRate(subT), off = Math.round(subT * rate), rows = '';
+    if (subs) {
+      rows += '<div class="dr-row"><span>Áskriftarafsláttur ' + pct(rate) + '</span><b class="save">−' + kr(off) + '</b></div>';
+      rows += '<div class="dr-row"><span>Heimsending á áskrift</span><b class="save">Frí</b></div>';
+      rows += '<div class="dr-row"><span>Gjöf í fyrstu sendingu</span><b>Weider hristibrúsi</b></div>';
+      if (subT < SUB.min) rows += '<p class="dr-hint">Lágmark í áskrift er ' + kr(SUB.min) + '. Bættu við ' + kr(SUB.min - subT) + '.</p>';
+      else if (rate < SUB.tier) rows += '<p class="dr-hint">Bættu ' + kr(SUB.tierAt - subT) + ' við áskriftina og fáðu 15% í stað 10%.</p>';
+    }
+    $('.dr-rows', drawer).innerHTML = rows;
+    $('.dr-total', drawer).textContent = kr(one + subT - off);
+    $('.dr-note', drawer).textContent = subs ? 'Áskrift: greitt við hverja sendingu. Sleppa, fresta eða hætta hvenær sem er.' : 'Sending reiknast í næsta skrefi.';
+    $('.dr-go', drawer).disabled = !cart.length || (subs > 0 && subT < SUB.min);
   }
   function trap(box, e) {
     var f = $$('a[href], button:not([disabled]), input, select', box).filter(function (x) { return x.offsetParent !== null; });
@@ -135,7 +155,7 @@
       var t = e.target.closest('[data-dq],[data-iq],[data-rm]'); if (!t) return;
       var i = +(t.dataset.dq || t.dataset.iq || t.dataset.rm), l = cart[i]; if (!l) return;
       var removed = t.dataset.rm || (t.dataset.dq && l.q === 1);
-      setQty(l.h, l.vt, t.dataset.rm ? 0 : l.q + (t.dataset.iq ? 1 : -1));
+      setQty(l.h, l.vt, t.dataset.rm ? 0 : l.q + (t.dataset.iq ? 1 : -1), l.sub);
       if (removed) drawer.focus({ preventScroll: true });
       else { var again = $('[data-' + (t.dataset.iq ? 'iq' : 'dq') + '="' + i + '"]', drawer); if (again) again.focus({ preventScroll: true }); }
     });
@@ -205,7 +225,7 @@
   addEventListener('scroll', hdrState, { passive: true }); hdrState();
   (function () {
     var c = new URLSearchParams(location.search).get('c'), page = location.pathname.split('/').pop() || 'index.html';
-    var key = page === 'vorur.html' ? (c || 'vorur') : page === 'vara.html' && byH[new URLSearchParams(location.search).get('h')] ? byH[new URLSearchParams(location.search).get('h')].cat : '';
+    var key = page === 'askrift.html' ? 'askrift' : page === 'vorur.html' ? (c || 'vorur') : page === 'vara.html' && byH[new URLSearchParams(location.search).get('h')] ? byH[new URLSearchParams(location.search).get('h')].cat : '';
     $$('.pills a').forEach(function (a) { if (a.dataset.nav === key) a.setAttribute('aria-current', 'page'); });
   })();
 
@@ -279,9 +299,9 @@
   function swapGrid(grid, html) {
     if (!G || reduce || !grid.children.length) { grid.innerHTML = html; return; }
     var old = Array.prototype.slice.call(grid.children);
-    G.to(old, { opacity: 0, y: 10, duration: .2, stagger: .015, overwrite: true, onComplete: function () {
+    G.to(old, { opacity: 0, y: 10, duration: .16, stagger: { amount: .1 }, overwrite: true, onComplete: function () {
       grid.innerHTML = html;
-      G.fromTo(grid.children, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .6, stagger: .045, ease: 'power3.out', clearProps: 'transform' });
+      G.fromTo(grid.children, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .55, stagger: { amount: .3 }, ease: 'power3.out', clearProps: 'transform' });
       if (ST) ST.refresh();
     } });
   }
@@ -333,11 +353,11 @@
         return '<div class="opt" role="group" aria-labelledby="qo' + oi + '"><span class="lbl" id="qo' + oi + '">' + esc(o.name) + ': <span class="ov"></span></span><div class="opt-v">' +
           o.values.map(function (v) { return '<button type="button" data-o="' + oi + '" data-val="' + esc(v) + '">' + esc(v) + '</button>'; }).join('') + '</div></div>';
       }).join('') +
-      '<div class="buy"><span class="price-l" data-q-price></span><div class="qty"><button type="button" data-qq="-1" aria-label="Fækka">' + ICON.minus + '</button><span data-q-n>1</span><button type="button" data-qq="1" aria-label="Fjölga">' + ICON.plus + '</button></div><button class="btn red" type="button" data-q-add>Setja í körfu</button></div>' +
+      pmHTML('q') + '<div class="buy"><span class="price-l" data-q-price></span><div class="qty"><button type="button" data-qq="-1" aria-label="Fækka">' + ICON.minus + '</button><span data-q-n>1</span><button type="button" data-qq="1" aria-label="Fjölga">' + ICON.plus + '</button></div>' + atcHTML('data-q-add') + '</div>' +
       '<p class="avail" data-q-av role="status" aria-live="polite"></p><a class="more-l" href="vara.html?h=' + p.h + '">Allar upplýsingar og innihald ' + ICON.arrow + '</a>';
     function idxFor(s2) { var t = s2.length ? s2.join(' / ') : p.v[0].t; return t in vByT ? vByT[t] : -1; }
     function swap(i) {
-      var photo = hasPhoto(p) && i === p.pv, src = photo ? photoSrc(p, true) : renderSrc(p, i);
+      var photo = true, src = variantSrc(p, i, true);
       if (img.getAttribute('src') === src) return;
       var go = function () { stage.classList.toggle('render', !photo); img.src = src; };
       if (!G || reduce) { go(); return; }
@@ -345,8 +365,8 @@
     }
     function state(anim) {
       var i = idxFor(sel); if (i < 0) i = vi; vi = i; var v = p.v[i];
-      $('[data-q-price]', root).textContent = kr(v.price * qn); $('[data-q-n]', root).textContent = qn;
-      var b = $('[data-q-add]', root); b.disabled = !v.avail; b.textContent = v.avail ? 'Setja í körfu' : 'Uppselt';
+      pmPaint(root, v.price, qn, $('[data-q-price]', root)); $('[data-q-n]', root).textContent = qn;
+      atcSet($('[data-q-add]', root), v.avail);
       var av = $('[data-q-av]', root); av.textContent = v.avail ? 'Til á lager · sent á 1–2 virkum dögum' : 'Þessi útgáfa er uppseld. Veldu aðra.'; av.classList.toggle('no', !v.avail);
       $$('.opt', root).forEach(function (g, oi) {
         $('.ov', g).textContent = sel[oi];
@@ -359,9 +379,102 @@
       if (o) { var oi = +o.dataset.o, s2 = sel.slice(); s2[oi] = o.dataset.val; if (idxFor(s2) < 0) { var m = p.v.findIndex(function (v) { return v.t.split(' / ')[oi] === o.dataset.val; }); if (m > -1) s2 = p.v[m].t.split(' / '); } sel = s2; state(); return; }
       var q = e.target.closest('[data-qq]'); if (q) { qn = Math.max(1, Math.min(20, qn + +q.dataset.qq)); state(false); return; }
       var a = e.target.closest('[data-q-add]');
-      if (a) { add(p.h, p.v[vi].t, qn); a.innerHTML = ICON.check + ' Komið í körfu'; clearTimeout(a._t); a._t = setTimeout(function () { state(false); }, 1500); }
+      if (a) { var t = p.v[vi].t, n = qn, sb = pmGet(root); atcRun(a, function () { add(p.h, t, n, sb); }); }
     });
+    root.addEventListener('change', function (e) { if (e.target.closest('.pm')) state(false); });
     state(false);
+  }
+
+  /* ---------- goal list: numbered rows, a cream bar slides to the row under the pointer and the product photo
+     unfolds from its centre beside it (mechanics from 21st.dev "Interactive List Preview", hyperiux) ---------- */
+  function goalList(box, goals) {
+    if (!box) return;
+    box.innerHTML = '<div class="gl-hl" aria-hidden="true"></div><div class="gl-imgs" aria-hidden="true">' +
+      goals.map(function (g) { return '<div class="gl-img">' + ph(byH[g[3]]) + '</div>'; }).join('') + '</div><ol class="gl-list">' +
+      goals.map(function (g, i) {
+        return '<li><a class="gl-row" href="vorur.html?g=' + ({ protein: 'byggja', kreatin: 'kraftur', pre: 'orka', amino: 'endurheimt', vitamin: 'heilsa', snarl: 'ferd' }[g[0]] || '') + '" data-i="' + i + '"><span class="gl-n">0' + (i + 1) + '</span><span class="gl-t">' + esc(g[1]) + '</span>' +
+          '<span class="gl-sp" aria-hidden="true"></span><span class="gl-d">' + esc(g[2]) + '</span><span class="gl-c">' + nVara(countIn(g[0])) + '</span>' +
+          '<span class="gl-th" aria-hidden="true">' + ph(byH[g[3]]) + '</span><i class="gl-a" aria-hidden="true">' + ICON.arrow + '</i></a></li>';
+      }).join('') + '</ol>';
+    var fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!fine || !G) return;
+    box.classList.add('fine');
+    var hl = $('.gl-hl', box), wrap = $('.gl-imgs', box), imgs = $$('.gl-img', box), rows = $$('.gl-row', box);
+    var active = -1, z = 10, gen = [], tgt = { x: 0, y: 0 }, cur = { x: 0, y: 0 }, rowY = 0, raf = 0;
+    imgs.forEach(function (im) { G.set(im, reduce ? { opacity: 0, visibility: 'hidden' } : { clipPath: 'inset(50%)', visibility: 'hidden' }); });
+    G.set(hl, { opacity: 0, height: 0 });
+    function placeX() { var sp = $('.gl-sp', rows[0]); if (!sp) return; var b = box.getBoundingClientRect(), r = sp.getBoundingClientRect(); wrap.style.left = (r.left - b.left + r.width / 2 - wrap.offsetWidth / 2) + 'px'; }
+    placeX(); addEventListener('resize', placeX);
+    function tick() { cur.x += (tgt.x - cur.x) * .18; cur.y += (tgt.y - cur.y) * .18; G.set(wrap, { x: cur.x, y: rowY + cur.y }); raf = (Math.abs(tgt.x - cur.x) + Math.abs(tgt.y - cur.y) > .2) ? requestAnimationFrame(tick) : 0; }
+    function kick() { if (!raf && !reduce) raf = requestAnimationFrame(tick); else if (reduce) G.set(wrap, { y: rowY }); }
+    function out(i) {
+      var im = imgs[i], g = gen[i] = (gen[i] || 0) + 1;
+      G.to(im, Object.assign(reduce ? { opacity: 0 } : { clipPath: 'inset(50%)' }, { duration: reduce ? .25 : .55, ease: 'power3.inOut', overwrite: true,
+        onComplete: function () { if (gen[i] === g) G.set(im, { visibility: 'hidden' }); } }));
+    }
+    function enter(i) {
+      if (i === active) return;
+      var row = rows[i], b = box.getBoundingClientRect(), r = row.getBoundingClientRect();
+      if (active > -1) { rows[active].classList.remove('on'); out(active); }
+      active = i; row.classList.add('on');
+      G.to(hl, { y: r.top - b.top, height: r.height, opacity: 1, duration: .45, ease: 'power3.out', overwrite: 'auto' });
+      rowY = r.top - b.top + r.height / 2 - wrap.offsetHeight / 2; kick();
+      var im = imgs[i]; gen[i] = (gen[i] || 0) + 1;
+      G.set(im, { zIndex: ++z, visibility: 'visible' });
+      G.fromTo(im, reduce ? { opacity: 0 } : { clipPath: 'inset(50%)' }, Object.assign(reduce ? { opacity: 1 } : { clipPath: 'inset(0%)' }, { duration: reduce ? .25 : .6, ease: 'power2.inOut', overwrite: true }));
+      G.fromTo($('img', im), { scale: reduce ? 1 : 1.18 }, { scale: 1, duration: .9, ease: 'power3.out' });
+    }
+    function leave() {
+      if (active > -1) { rows[active].classList.remove('on'); out(active); active = -1; }
+      G.to(hl, { opacity: 0, duration: .35, ease: 'power2.out', overwrite: 'auto' });
+      tgt = { x: 0, y: 0 }; kick();
+    }
+    rows.forEach(function (row, i) { row.addEventListener('mouseenter', function () { enter(i); }); row.addEventListener('focus', function () { enter(i); }); row.addEventListener('blur', function () { if (!box.contains(document.activeElement)) leave(); }); });
+    $('.gl-list', box).addEventListener('mouseleave', leave);
+    box.addEventListener('mousemove', function (e) { if (reduce) return; var b = box.getBoundingClientRect(); tgt = { x: ((e.clientX - b.left) / b.width - .5) * 40, y: ((e.clientY - b.top) / b.height - .5) * 24 }; kick(); });
+  }
+
+  /* ---------- add-to-cart button: sinks, bag -> spinner -> check, then settles back
+     (phases from 21st.dev "Add to Cart Button", bidyut10) ---------- */
+  var BAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>';
+  var SPIN = '<svg class="atc-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>';
+  function atcHTML(attr) {
+    return '<button class="btn red atc" type="button" data-phase="idle" ' + attr + '><span class="atc-i" aria-hidden="true"><span data-k="idle">' + BAG + '</span><span data-k="loading">' + SPIN + '</span><span data-k="added">' + ICON.check + '</span></span>' +
+      '<span class="atc-l"><span data-k="idle" class="atc-idle">Setja í körfu</span><span data-k="loading" aria-hidden="true">Set í körfu…</span><span data-k="added" aria-hidden="true">Komið í körfu</span></span><span class="sr atc-live" aria-live="polite"></span></button>';
+  }
+  function atcSet(b, avail) { if (b.dataset.phase !== 'idle') return; b.disabled = !avail; $('.atc-idle', b).textContent = avail ? 'Setja í körfu' : 'Uppselt'; }
+  function atcRun(b, done) {
+    if (b.dataset.phase !== 'idle') return;
+    var live = $('.atc-live', b); b.dataset.phase = 'loading'; live.textContent = 'Set í körfu…';
+    setTimeout(function () { done(); b.dataset.phase = 'added'; live.textContent = 'Komið í körfu'; }, reduce ? 0 : 380);
+    setTimeout(function () { b.dataset.phase = 'idle'; live.textContent = ''; }, reduce ? 1200 : 1900);
+  }
+
+  /* ---------- purchase mode: buy once or subscribe ---------- */
+  function pmHTML(key) {
+    return '<div class="pm" role="radiogroup" aria-label="Kaupleið">' +
+      '<label class="pm-o"><input type="radio" name="pm-' + key + '" value="0" checked><span class="pm-dot" aria-hidden="true"></span><span class="pm-t"><b>Kaupa einu sinni</b></span><span class="pm-p" data-pm-one></span></label>' +
+      '<label class="pm-o"><input type="radio" name="pm-' + key + '" value="sub"><span class="pm-dot" aria-hidden="true"></span><span class="pm-t"><b>Áskrift <em>−10%</em></b><small>Frí heimsending · 15% yfir 15.000 kr. · hættu hvenær sem er</small></span><span class="pm-p" data-pm-sub></span></label>' +
+      '<label class="pm-iv" hidden><span>Sending</span><select data-pm-iv>' + Object.keys(SUB.iv).map(function (k) { return '<option value="' + k + '">' + SUB.iv[k] + '</option>'; }).join('') + '</select></label></div>';
+  }
+  function pmGet(root) { var r = $('.pm input:checked', root); return r && r.value === 'sub' ? +$('[data-pm-iv]', root).value : 0; }
+  function pmPaint(root, unit, qn, priceEl) {
+    var sub = pmGet(root), full = unit * qn, disc = Math.round(full * (1 - SUB.base));
+    $('[data-pm-one]', root).textContent = kr(full); $('[data-pm-sub]', root).textContent = kr(disc);
+    $('.pm-iv', root).hidden = !sub;
+    $$('.pm-o', root).forEach(function (o) { o.classList.toggle('on', $('input', o).checked); });
+    priceEl.innerHTML = sub ? '<s>' + kr(full) + '</s> ' + kr(disc) : kr(full);
+    return sub;
+  }
+
+  /* ---------- magnetic pull on primary buttons (mouse only; 21st.dev "Magnetic Button" idea) ---------- */
+  function magnetic(sel) {
+    if (!G || reduce || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    $$(sel).forEach(function (el) {
+      var qx = G.quickTo(el, 'x', { duration: .6, ease: 'power3' }), qy = G.quickTo(el, 'y', { duration: .6, ease: 'power3' });
+      el.addEventListener('pointermove', function (e) { var r = el.getBoundingClientRect(); qx((e.clientX - r.left - r.width / 2) * .3); qy((e.clientY - r.top - r.height / 2) * .35); });
+      el.addEventListener('pointerleave', function () { qx(0); qy(0); });
+    });
   }
 
   /* ---------- HOME ---------- */
@@ -394,12 +507,12 @@
       ['vitamin', 'Daglega heilsan', 'Vítamín, steinefni og omega', 'omega-3-superior'],
       ['snarl', 'Á ferðinni', 'Próteinstykki, snarl og drykkir', 'whey-wafer']
     ];
-    $('#goal-row').innerHTML = GOALS.map(function (g) {
-      return '<a class="goal" href="vorur.html?c=' + g[0] + '">' + ph(byH[g[3]]) + '<span class="goal-t"><b>' + esc(g[1]) + '</b><span>' + esc(g[2]) + '</span><small>' + nVara(countIn(g[0])) + '</small></span><i class="goal-a" aria-hidden="true">' + ICON.arrow + '</i></a>';
-    }).join('');
+    goalList($('#goal-row'), GOALS);
     quickBuy(byH['premium-whey'], $('#quick'), $('.spot-l'));
+    askTeaser();
 
     heroIntro();
+    magnetic('.hero-cta .btn, .best > .center .btn, .spot .btn.red');
     if (G && ST && !reduce) {
       // the cream sheet slides over the sticky hero: hero sinks and darkens underneath (video: panel slides up)
       G.timeline({ scrollTrigger: { trigger: '.sheet', start: 'top bottom', end: 'top top', scrub: .6 } })
@@ -482,41 +595,215 @@
     }
   }
 
-  /* ---------- SHOP ---------- */
+  /* ---------- ÁSKRIFT: box builder ---------- */
+  var STAPLES = ['premium-whey', 'gold-whey', 'protein-80-plus', 'plant-based-protein', 'micronized-creatine', 'pure-creatine', 'premium-creatin-watermelon',
+    'total-rush', 'premium-bcaa-8-1-1-l-glutamine-500gr', 'omega-3-superior', 'vitamin-d3-k2-kapseln', 'magnesium-gummi'];
+  var bestV = function (p, prefer) {
+    if (prefer) { var m = p.v.map(function (v, i) { return [v, i]; }).filter(function (x) { return x[0].avail && x[0].t.indexOf(prefer) > -1; })[0]; if (m) return m[1]; }
+    return p.v[p.pv] && p.v[p.pv].avail ? p.pv : Math.max(0, p.v.findIndex(function (v) { return v.avail; }));
+  };
+  var PRESETS = [
+    ['Grunnurinn', 'Prótein + kreatín fyrir daglega æfingu', [['premium-whey', '500 g'], ['pure-creatine', '250 g']]],
+    ['Styrkur', 'Stóri pokinn af próteini + kreatín', [['gold-whey', '2 kg'], ['micronized-creatine']]],
+    ['Orka & endurheimt', 'Fyrir æfingu og eftir', [['total-rush'], ['premium-bcaa-8-1-1-l-glutamine-500gr'], ['micronized-creatine']]]
+  ];
+  function boxMath(lines, wk) {
+    var full = lines.reduce(function (a, l) { return a + byH[l.h].v[l.vi].price * l.q; }, 0), rate = subRate(full), off = Math.round(full * rate);
+    return { full: full, rate: rate, off: off, pay: full - off, perYear: Math.round(off * 52 / wk), ok: full >= SUB.min };
+  }
+  function askrift() {
+    var grid = $('#ask-grid'), sum = $('#ask-sum'), box = {}, wk = 4;
+    grid.innerHTML = STAPLES.map(function (h) {
+      var p = byH[h]; if (!p) return ''; var vi = bestV(p);
+      var opts = many(p) ? '<label class="sr" for="av-' + h + '">Útgáfa: ' + esc(p.t) + '</label><select class="av" id="av-' + h + '" data-h="' + h + '">' + p.v.map(function (v, i) { return '<option value="' + i + '"' + (i === vi ? ' selected' : '') + (v.avail ? '' : ' disabled') + '>' + esc(v.t) + (v.avail ? '' : ' (uppselt)') + '</option>'; }).join('') + '</select>' : '';
+      return '<article class="ab" data-h="' + h + '">' + ph(p) + '<div class="ab-b"><span class="pc-c">' + esc(catLabel[p.cat] || '') + '</span><h3 class="pc-n">' + esc(p.t) + '</h3>' + opts +
+        '<span class="ab-p" data-abp></span><div class="ab-a" data-aba></div></div></article>';
+    }).join('');
+    $('#ask-presets').innerHTML = PRESETS.map(function (pr, i) {
+      var lines = pr[2].map(function (x) { return { h: x[0], vi: bestV(byH[x[0]], x[1]), q: 1 }; }), m = boxMath(lines, 4);
+      return '<button type="button" class="preset" data-pre="' + i + '"><b>' + esc(pr[0]) + '</b><span>' + esc(pr[1]) + '</span><span class="preset-p"><s>' + kr(m.full) + '</s> ' + kr(m.pay) + ' <small>á mánuði</small></span></button>';
+    }).join('');
+    function lines() { return Object.keys(box).filter(function (h) { return box[h].q > 0; }).map(function (h) { return { h: h, vi: box[h].vi, q: box[h].q }; }); }
+    function paint() {
+      $$('.ab', grid).forEach(function (el) {
+        var h = el.dataset.h, p = byH[h], b = box[h], vi = b ? b.vi : +(($('.av', el) || {}).value || bestV(p)), v = p.v[vi], q = b ? b.q : 0;
+        $('[data-abp]', el).innerHTML = '<s>' + kr(v.price) + '</s> ' + kr(Math.round(v.price * (1 - SUB.base))) + ' <small>í áskrift</small>';
+        $('[data-aba]', el).innerHTML = !v.avail ? '<button class="bk" type="button" disabled>Uppselt</button>' : q ?
+          '<div class="qty"><button type="button" data-abq="-1" aria-label="Fækka: ' + esc(p.t) + '">' + ICON.minus + '</button><span>' + q + ' í boxinu</span><button type="button" data-abq="1" aria-label="Fjölga: ' + esc(p.t) + '">' + ICON.plus + '</button></div>' :
+          '<button class="bk" type="button" data-abq="1">Bæta í boxið ' + ICON.plus + '</button>';
+        el.classList.toggle('in', q > 0);
+      });
+      var ls = lines(), m = boxMath(ls, wk);
+      sum.innerHTML = '<p class="lbl">Boxið þitt</p>' + (ls.length ? '<ul class="as-l">' + ls.map(function (l) { var p = byH[l.h], v = p.v[l.vi]; return '<li><span>' + l.q + ' × ' + esc(p.t) + (many(p) ? '<small>' + esc(v.t) + '</small>' : '') + '</span><b>' + kr(v.price * l.q) + '</b></li>'; }).join('') + '</ul>' : '<p class="as-empty">Veldu vörur eða byrjaðu á tilbúnu boxi.</p>') +
+        '<label class="as-iv"><span>Sending</span><select id="as-iv">' + Object.keys(SUB.iv).map(function (k) { return '<option value="' + k + '"' + (+k === wk ? ' selected' : '') + '>' + SUB.iv[k] + '</option>'; }).join('') + '</select></label>' +
+        '<div class="dr-row"><span>Venjulegt verð</span><b>' + kr(m.full) + '</b></div>' +
+        '<div class="dr-row"><span>Áskriftarafsláttur ' + pct(m.rate) + '</span><b class="save">−' + kr(m.off) + '</b></div>' +
+        '<div class="dr-row"><span>Heimsending</span><b class="save">Frí</b></div>' +
+        '<div class="dr-row"><span>Gjöf í fyrstu sendingu</span><b>Weider hristibrúsi</b></div>' +
+        '<div class="as-pay"><span>Þú greiðir</span><strong>' + kr(m.pay) + '</strong><small>' + SUB.iv[wk].toLowerCase() + '</small></div>' +
+        (m.full ? '<p class="as-save">Þú sparar <b>' + kr(m.perYear) + '</b> á ári, auk sendingarkostnaðar.</p>' : '') +
+        (m.full && !m.ok ? '<p class="dr-hint">Lágmark í áskrift er ' + kr(SUB.min) + '. Bættu við ' + kr(SUB.min - m.full) + '.</p>' : m.full && m.rate < SUB.tier ? '<p class="dr-hint">Bættu ' + kr(SUB.tierAt - m.full) + ' við og fáðu 15% af öllu boxinu.</p>' : '') +
+        '<button class="btn red wide" type="button" id="as-go"' + (m.ok ? '' : ' disabled') + '>Setja áskrift í körfu</button><p class="as-fine">Greitt við hverja sendingu. Enginn binditími.</p>';
+    }
+    grid.addEventListener('click', function (e) {
+      var t = e.target.closest('[data-abq]'); if (!t) return;
+      var el = t.closest('.ab'), h = el.dataset.h, sel = $('.av', el), b = box[h] || (box[h] = { vi: sel ? +sel.value : bestV(byH[h]), q: 0 });
+      b.q = Math.max(0, Math.min(10, b.q + +t.dataset.abq)); if (!b.q) delete box[h];
+      paint(); var again = $('[data-abq="' + t.dataset.abq + '"]', el) || $('[data-abq]', el); if (again) again.focus({ preventScroll: true });
+    });
+    grid.addEventListener('change', function (e) { var s2 = e.target.closest('.av'); if (!s2) return; if (box[s2.dataset.h]) box[s2.dataset.h].vi = +s2.value; paint(); });
+    sum.addEventListener('change', function (e) { if (e.target.id === 'as-iv') { wk = +e.target.value; paint(); } });
+    sum.addEventListener('click', function (e) {
+      if (e.target.closest('#as-go')) { lines().forEach(function (l) { add(l.h, byH[l.h].v[l.vi].t, l.q, wk); }); openCart({ currentTarget: e.target.closest('#as-go'), detail: e.detail }); }
+    });
+    $('#ask-presets').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-pre]'); if (!b) return; box = {};
+      PRESETS[+b.dataset.pre][2].forEach(function (x) { box[x[0]] = { vi: bestV(byH[x[0]], x[1]), q: 1 }; var s2 = $('#av-' + x[0]); if (s2) s2.value = box[x[0]].vi; });
+      $$('.preset').forEach(function (x) { x.classList.toggle('on', x === b); }); paint();
+      if (innerWidth <= 900) $('#ask-sum').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    });
+    $('.faq').addEventListener('click', function (e) { var a = e.target.closest('.acc-b'); if (!a) return; var open = a.getAttribute('aria-expanded') !== 'true'; a.setAttribute('aria-expanded', open); document.getElementById(a.getAttribute('aria-controls')).classList.toggle('open', open); });
+    paint();
+    reveals('.ask-how li, .ab, .faq .acc-i');
+  }
+  function askTeaser() {
+    var el = $('#ask-teaser'); if (!el) return;
+    var lines = [{ h: 'gold-whey', vi: bestV(byH['gold-whey'], '2 kg'), q: 1 }, { h: 'micronized-creatine', vi: bestV(byH['micronized-creatine']), q: 1 }], m = boxMath(lines, 4);
+    el.innerHTML = '<div class="at-imgs">' + lines.map(function (l) { return ph(byH[l.h]); }).join('') + '</div><div class="at-b"><p class="lbl">Dæmi: Styrkur-boxið</p><p class="at-n">' + lines.map(function (l) { var p = byH[l.h]; return esc(p.t.replace(/\s+\d[\d.,]*\s*(g|kg).*$/i, '')) + (many(p) ? ' <small>' + esc(p.v[l.vi].t.split(' / ').pop()) + '</small>' : ''); }).join(' + ') + '</p>' +
+      '<div class="at-p"><s>' + kr(m.full) + '</s><strong>' + kr(m.pay) + '</strong><span>á mánuði · frí heimsending</span></div><p class="at-s">Þú sparar ' + kr(m.perYear) + ' á ári</p></div>';
+  }
+
+  /* ---------- SHOP: filters built around what people come to buy ---------- */
+  var GOALMAP = {
+    byggja: ['premium-whey', 'gold-whey', 'protein-80-plus', 'plant-based-protein', 'mega-mass-4000-probierbeutel', 'protein-cups', 'whey-wafer'],
+    kraftur: P.filter(function (p) { return p.cats.indexOf('kreatin') > -1; }).map(function (p) { return p.h; }),
+    orka: P.filter(function (p) { return p.cats.indexOf('pre') > -1; }).map(function (p) { return p.h; }).concat(['premium-hydration']),
+    endurheimt: P.filter(function (p) { return p.cats.indexOf('amino') > -1; }).map(function (p) { return p.h; }).concat(['premium-hydration', 'magnesium-caps']),
+    svefn: ['melatonin-gummies', 'ashwagandha-pro', 'ashwagandha-gummi', 'magnesium-gummi', 'magnesium-caps'],
+    ferd: ['rush-ready-to-drink', 'protein-cups', 'whey-wafer', 'premium-hydration', 'mega-mass-4000-probierbeutel', 'mega-mass-pump-probierbeutel', 'weider-r-shaker']
+  };
+  GOALMAP.heilsa = P.filter(function (p) { return p.cats.indexOf('vitamin') > -1 && GOALMAP.svefn.indexOf(p.h) < 0 && !/creatine|glutamin|hydration/.test(p.h); }).map(function (p) { return p.h; });
+  var GOALS_SHOP = [['all', 'Allt'], ['byggja', 'Byggja upp'], ['kraftur', 'Meiri kraftur'], ['orka', 'Orka á æfingu'], ['endurheimt', 'Endurheimt'], ['heilsa', 'Dagleg heilsa'], ['svefn', 'Svefn og ró'], ['ferd', 'Á ferðinni']];
+  function formOf(p) {
+    var t = (p.h + ' ' + p.t).toLowerCase(), b = (p.body || '').toLowerCase();
+    if (p.cat === 'aukahlutir') return 'auka';
+    if (/probierbeutel|prufa/.test(t)) return 'prufa';
+    if (/gummi|gúmmí|gummies/.test(t)) return 'gummi';
+    if (/wafer|cups/.test(t)) return 'snarl';
+    if (/ready-to-drink|rtd|hydration|stikur/.test(t)) return 'drykkur';
+    if (/töflur|toflur|caps|kapseln|capsules|omega|tribulus|arginine|stack/.test(t) || /\bhylki|\btöflu/.test(b) && !/duft/.test(t)) return 'toflur';
+    return 'duft';
+  }
+  var priceOf = function (p) { return p.price < 3000 ? 'u3' : p.price <= 5000 ? 'm' : 'o5'; };
+  var FACETS = [
+    { k: 'c', label: 'Flokkur', opts: CATS.map(function (c) { return [c.k, c.label]; }), test: function (p, v) { return p.cats.indexOf(v) > -1; } },
+    { k: 'f', label: 'Form', opts: [['duft', 'Duft'], ['toflur', 'Töflur og hylki'], ['gummi', 'Gúmmí'], ['drykkur', 'Drykkir'], ['snarl', 'Snarl'], ['prufa', 'Prufur'], ['auka', 'Aukahlutir']], test: function (p, v) { return formOf(p) === v; } },
+    { k: 'p', label: 'Verð', opts: [['u3', 'Undir 3.000 kr.'], ['m', '3.000–5.000 kr.'], ['o5', 'Yfir 5.000 kr.']], test: function (p, v) { return priceOf(p) === v; } },
+    { k: 'a', label: 'Eiginleikar', opts: [['stock', 'Á lager'], ['new', 'Nýtt'], ['vegan', 'Vegan'], ['sub', 'Hægt í áskrift']], test: function (p, v) {
+      return v === 'stock' ? p.avail : v === 'new' ? p.new : v === 'vegan' ? p.vegan : formOf(p) !== 'prufa' && formOf(p) !== 'auka'; } }
+  ];
   function shop() {
-    var grid = $('#shop-grid'), box = $('#shop-tabs'), q = $('#leit'), sort = $('#sort'), out = $('#shop-n');
-    var params = new URLSearchParams(location.search), cat = params.get('c');
-    if (!catLabel[cat]) cat = 'all';
-    tabButtons(box, cat);
+    var grid = $('#shop-grid'), box = $('#shop-tabs'), q = $('#leit'), sort = $('#sort'), out = $('#shop-n'), panel = $('#fpanel'), fact = $('#fact');
+    var params = new URLSearchParams(location.search);
+    var goal = GOALMAP[params.get('g')] ? params.get('g') : 'all', sel = {};
+    FACETS.forEach(function (f) { sel[f.k] = (params.get(f.k) || '').split(',').filter(function (v) { return f.opts.some(function (o) { return o[0] === v; }); }); });
     if (params.get('q')) q.value = params.get('q');
-    var clr = $('.sclear'), F = {};
+    if (params.get('s')) sort.value = params.get('s');
+    box.insertAdjacentHTML('beforeend', GOALS_SHOP.map(function (g) { return '<button role="tab" type="button" aria-selected="' + (g[0] === goal) + '" data-tab="' + g[0] + '">' + esc(g[1]) + '</button>'; }).join(''));
+    var endT = function () { box.classList.toggle('end', box.scrollLeft >= box.scrollWidth - box.clientWidth - 4); }; box.addEventListener('scroll', endT, { passive: true }); setTimeout(endT, 50);
+    panel.innerHTML = '<div class="fp-h"><h2 class="h3">Sía</h2><button class="x fp-x" type="button" aria-label="Loka síum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="fp-body">' +
+      FACETS.map(function (f) {
+        return '<fieldset class="fg"><legend class="lbl">' + f.label + '</legend>' + f.opts.map(function (o) {
+          return '<label class="fo"><input type="checkbox" data-k="' + f.k + '" value="' + o[0] + '"' + (sel[f.k].indexOf(o[0]) > -1 ? ' checked' : '') + '><span class="fo-box" aria-hidden="true"></span><span class="fo-t">' + esc(o[1]) + '</span><em class="fo-n"></em></label>';
+        }).join('') + '</fieldset>';
+      }).join('') + '</div><div class="fp-foot"><button class="btn ghost fp-clear" type="button">Hreinsa</button><button class="btn red fp-show" type="button">Sýna vörur</button></div>';
+    function base(skipK) {
+      var t = q.value.trim(), list = t ? find(t).map(function (r) { return r.p; }) : P.slice();
+      return list.filter(function (p) {
+        if (goal !== 'all' && GOALMAP[goal].indexOf(p.h) < 0) return false;
+        return FACETS.every(function (f) { return f.k === skipK || !sel[f.k].length || sel[f.k].some(function (v) { return f.test(p, v); }); });
+      });
+    }
     function list() {
-      var t = q.value.trim(), s = sort.value;
-      var l = t ? find(t).map(function (r) { return r.p; }) : (s === 'pop' ? photoFirst(P) : P.slice());
-      l = l.filter(function (p) { return inCat(p, cat) && (!F.stock || p.avail) && (!F.new || p.new) && (!F.vegan || p.vegan); });
-      if (s === 'new') l.sort(function (a, b) { return b.new - a.new; });
-      if (s === 'lo') l.sort(function (a, b) { return a.price - b.price; });
-      if (s === 'hi') l.sort(function (a, b) { return b.price - a.price; });
-      if (s === 'az') l.sort(function (a, b) { return a.t.localeCompare(b.t, 'is'); });
+      var l = base(), s2 = sort.value;
+      if (!q.value.trim() && s2 === 'pop') l = photoFirst(l);
+      if (s2 === 'new') l.sort(function (a, b) { return b.new - a.new; });
+      if (s2 === 'lo') l.sort(function (a, b) { return a.price - b.price; });
+      if (s2 === 'hi') l.sort(function (a, b) { return b.price - a.price; });
+      if (s2 === 'az') l.sort(function (a, b) { return a.t.localeCompare(b.t, 'is'); });
       return l;
+    }
+    function nActive() { return FACETS.reduce(function (a, f) { return a + sel[f.k].length; }, 0); }
+    function sync() {
+      var u = new URL(location.href);
+      ['g', 'q', 's'].concat(FACETS.map(function (f) { return f.k; })).forEach(function (k) { u.searchParams.delete(k); });
+      if (goal !== 'all') u.searchParams.set('g', goal);
+      FACETS.forEach(function (f) { if (sel[f.k].length) u.searchParams.set(f.k, sel[f.k].join(',')); });
+      if (q.value.trim()) u.searchParams.set('q', q.value.trim());
+      if (sort.value !== 'pop') u.searchParams.set('s', sort.value);
+      history.replaceState(null, '', u);
     }
     function draw(anim) {
       var l = list();
-      out.textContent = nVara(l.length) + (cat !== 'all' ? ' í ' + catLabel[cat].toLowerCase() : '') + (q.value.trim() ? ' fyrir „' + q.value.trim() + '“' : '');
-      var html = l.length ? l.map(pc).join('') : '<p class="none">Engin vara passar. Prófaðu annað leitarorð eða taktu síu af.</p>';
+      // live counts per option: everything else applied, this option added
+      FACETS.forEach(function (f) {
+        var b = base(f.k);
+        $$('input[data-k="' + f.k + '"]', panel).forEach(function (inp) {
+          var n = b.filter(function (p) { return f.test(p, inp.value); }).length, lab = inp.closest('.fo');
+          $('.fo-n', lab).textContent = n; lab.classList.toggle('zero', !n && !inp.checked); inp.checked = sel[f.k].indexOf(inp.value) > -1;
+        });
+      });
+      var chips = [];
+      FACETS.forEach(function (f) { sel[f.k].forEach(function (v) { var o = f.opts.filter(function (x) { return x[0] === v; })[0]; chips.push('<button type="button" class="fchip-x" data-rk="' + f.k + '" data-rv="' + v + '">' + esc(o[1]) + ' <span aria-hidden="true">×</span><span class="sr">fjarlægja síu</span></button>'); }); });
+      if (q.value.trim()) chips.push('<button type="button" class="fchip-x" data-rq="1">„' + esc(q.value.trim()) + '“ <span aria-hidden="true">×</span><span class="sr">hreinsa leit</span></button>');
+      fact.innerHTML = '<p class="fact-n" aria-live="polite"><b>' + nVara(l.length) + '</b>' + (goal !== 'all' ? ' · ' + esc(GOALS_SHOP.filter(function (g) { return g[0] === goal; })[0][1]) : '') + '</p>' + chips.join('') + (chips.length ? '<button type="button" class="fclear" data-rall="1">Hreinsa allt</button>' : '');
+      var n = nActive(); $$('.fbtn .fcount').forEach(function (e) { e.textContent = n ? n : ''; });
+      $('.fp-show', panel).textContent = 'Sýna ' + nVara(l.length);
+      var html = l.length ? l.map(pc).join('') : '<div class="none"><p>Engin vara passar við þessar síur.</p>' + (n || q.value.trim() ? '<button type="button" class="btn ink" data-rall="1">Hreinsa síur</button>' : '') + '</div>';
       if (anim) swapGrid(grid, html); else grid.innerHTML = html;
-      document.title = (cat !== 'all' ? catLabel[cat] : 'Vörur') + ' · Weider á Íslandi';
-      $('#shop-t').textContent = cat !== 'all' ? catLabel[cat] : 'Vörur';
+      var one = sel.c.length === 1 && goal === 'all' ? catLabel[sel.c[0]] : goal !== 'all' ? GOALS_SHOP.filter(function (g) { return g[0] === goal; })[0][1] : 'Vörur';
+      $('#shop-t').textContent = one; document.title = one + ' · Weider á Íslandi';
+      out.textContent = nVara(l.length);
+      $$('.pills a').forEach(function (a) { a.removeAttribute('aria-current'); if (a.dataset.nav === (sel.c.length === 1 ? sel.c[0] : 'vorur')) a.setAttribute('aria-current', 'page'); });
+      sync();
     }
-    tabs(box, function (k) {
-      cat = k; var u = new URL(location.href); if (k === 'all') u.searchParams.delete('c'); else u.searchParams.set('c', k);
-      history.replaceState(null, '', u); draw(true);
-      $$('.pills a').forEach(function (a) { a.toggleAttribute('aria-current', a.dataset.nav === (k === 'all' ? 'vorur' : k)); if (a.hasAttribute('aria-current')) a.setAttribute('aria-current', 'page'); });
+    tabs(box, function (k) { goal = k; draw(true); });
+    panel.addEventListener('change', function (e) {
+      var inp = e.target.closest('input[data-k]'); if (!inp) return;
+      var arr = sel[inp.dataset.k], i = arr.indexOf(inp.value);
+      if (inp.checked && i < 0) arr.push(inp.value); else if (!inp.checked && i > -1) arr.splice(i, 1);
+      draw(true);
     });
+    function clearAll() { FACETS.forEach(function (f) { sel[f.k] = []; }); q.value = ''; $('.sclear').hidden = true; draw(true); }
+    document.addEventListener('click', function (e) {
+      var r = e.target.closest('[data-rk]');
+      if (r) { var a = sel[r.dataset.rk], i = a.indexOf(r.dataset.rv); if (i > -1) a.splice(i, 1); draw(true); return; }
+      if (e.target.closest('[data-rq]')) { q.value = ''; $('.sclear').hidden = true; draw(true); return; }
+      if (e.target.closest('[data-rall]')) clearAll();
+    });
+    $('.fp-clear', panel).addEventListener('click', clearAll);
+    // phone: filters open as a bottom sheet
+    var fbtn = $('.fbtn'), sheetOn = false, fscrim = $('.fscrim');
+    function openSheet(e) {
+      sheetOn = true; panel.classList.add('on'); fscrim.hidden = false; requestAnimationFrame(function () { fscrim.classList.add('on'); });
+      fbtn.setAttribute('aria-expanded', 'true'); lock(true);
+      (e && e.detail === 0 ? $('input', panel) : panel).focus({ preventScroll: true });
+    }
+    function closeSheet() {
+      if (!sheetOn) return; sheetOn = false; panel.classList.remove('on'); fscrim.classList.remove('on');
+      setTimeout(function () { if (!sheetOn) fscrim.hidden = true; }, 400);
+      fbtn.setAttribute('aria-expanded', 'false'); lock(false); fbtn.focus({ preventScroll: true });
+    }
+    fbtn.addEventListener('click', openSheet);
+    $('.fp-x', panel).addEventListener('click', closeSheet);
+    $('.fp-show', panel).addEventListener('click', function () { closeSheet(); grid.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); });
+    fscrim.addEventListener('click', closeSheet);
+    panel.addEventListener('keydown', function (e) { if (!sheetOn) return; if (e.key === 'Escape') closeSheet(); if (e.key === 'Tab') trap(panel, e); });
+    matchMedia('(min-width: 1001px)').addEventListener('change', function (m) { if (m.matches) closeSheet(); });
+    var clr = $('.sclear');
     var tq; q.addEventListener('input', function () { clr.hidden = !q.value; clearTimeout(tq); tq = setTimeout(function () { draw(true); }, 160); });
     clr.hidden = !q.value;
     clr.addEventListener('click', function () { q.value = ''; clr.hidden = true; draw(true); q.focus(); });
-    $$('.fchip').forEach(function (c) { c.addEventListener('click', function () { var on = c.getAttribute('aria-pressed') !== 'true'; c.setAttribute('aria-pressed', on); F[c.dataset.f] = on; draw(true); }); });
     sort.addEventListener('change', function () { draw(true); });
     draw(false);
     if (location.hash === '#leit') addEventListener('load', function () { setTimeout(function () { q.focus({ preventScroll: true }); }, 0); });
@@ -552,7 +839,7 @@
     var vi = p.v[p.pv] && p.v[p.pv].avail ? p.pv : Math.max(0, p.v.findIndex(function (v) { return v.avail; }));
     var sel = p.opts.length ? p.v[vi].t.split(' / ') : [];
     var qn = 1;
-    function srcFor(i) { return hasPhoto(p) && i === p.pv ? { s: photoSrc(p, true), photo: true } : { s: renderSrc(p, i), photo: false }; }
+    function srcFor(i) { return { s: variantSrc(p, i, true), photo: true }; }
     var cur = srcFor(vi);
     var thumbs = [], seen = {};
     if (p.v.length > 1) p.v.forEach(function (v, i) { var s = srcFor(i).s; if (!seen[s]) { seen[s] = 1; thumbs.push(i); } });
@@ -565,7 +852,7 @@
         return '<div class="opt" role="group" aria-labelledby="ol' + oi + '"><span class="lbl" id="ol' + oi + '">' + esc(o.name) + ': <span class="ov"></span></span><div class="opt-v">' +
           o.values.map(function (v) { return '<button type="button" data-o="' + oi + '" data-val="' + esc(v) + '">' + esc(v) + '</button>'; }).join('') + '</div></div>';
       }).join('') +
-      '<div class="buy"><span class="price-l" id="pp"></span><div class="qty"><button type="button" data-pq="-1" aria-label="Fækka">' + ICON.minus + '</button><span id="pq">1</span><button type="button" data-pq="1" aria-label="Fjölga">' + ICON.plus + '</button></div><button class="btn red" type="button" id="padd">Setja í körfu</button></div>' +
+      pmHTML('p') + '<div class="buy"><span class="price-l" id="pp"></span><div class="qty"><button type="button" data-pq="-1" aria-label="Fækka">' + ICON.minus + '</button><span id="pq">1</span><button type="button" data-pq="1" aria-label="Fjölga">' + ICON.plus + '</button></div>' + atcHTML('id="padd"') + '</div>' +
       '<p class="avail" id="pa" role="status" aria-live="polite"></p>' +
       '<div class="acc">' + acc('Vörulýsing', p.body || '<p>Lýsing kemur fljótlega.</p>', true) + acc('Sending og skil', '<p>Sent með Dropp á 1–2 virkum dögum, um allt land.</p><p>14 daga skilaréttur.</p><p>Spurningar? Hringdu í <a href="tel:+3547700295">770 0295</a> eða sendu á <a href="mailto:weidervorur@gmail.com">weidervorur@gmail.com</a>.</p>', false) + '</div>';
     function acc(t, html, open) {
@@ -588,10 +875,10 @@
     }
     function state(animate) {
       var i = idxFor(sel); if (i < 0) i = vi; vi = i; var v = p.v[i];
-      $('#pp').innerHTML = kr(v.price * qn);
+      pmPaint(info, v.price, qn, $('#pp'));
       $('#pq').textContent = qn;
       var pa = $('#pa'), btn = $('#padd');
-      btn.disabled = !v.avail; btn.textContent = v.avail ? 'Setja í körfu' : 'Uppselt';
+      atcSet(btn, v.avail);
       pa.textContent = v.avail ? 'Til á lager · sent á 1–2 virkum dögum' : (many(p) ? 'Þessi útgáfa er uppseld. Veldu aðra.' : 'Uppselt í bili.');
       pa.classList.toggle('no', !v.avail);
       $$('.opt', info).forEach(function (g, oi) {
@@ -615,14 +902,13 @@
       var q = e.target.closest('[data-pq]');
       if (q) { qn = Math.max(1, Math.min(20, qn + +q.dataset.pq)); state(false); return; }
       if (e.target.closest('#padd')) {
-        var b = $('#padd'); add(p.h, p.v[vi].t, qn);
-        b.innerHTML = ICON.check + ' Komið í körfu'; b.querySelector('svg').style.cssText = 'width:18px;height:18px';
-        clearTimeout(b._t); b._t = setTimeout(function () { state(false); }, 1500);
+        var b = $('#padd'), t = p.v[vi].t, n = qn, sb = pmGet(info); atcRun(b, function () { add(p.h, t, n, sb); });
         return;
       }
       var a = e.target.closest('.acc-b');
       if (a) { var open = a.getAttribute('aria-expanded') !== 'true'; a.setAttribute('aria-expanded', open); document.getElementById(a.getAttribute('aria-controls')).classList.toggle('open', open); }
     });
+    info.addEventListener('change', function (e) { if (e.target.closest('.pm')) state(false); });
     media.addEventListener('click', function (e) { var t = e.target.closest('[data-v]'); if (!t) return; vi = +t.dataset.v; sel = p.opts.length ? p.v[vi].t.split(' / ') : []; state(true); });
     state(false);
     var rel = photoFirst(P.filter(function (x) { return x.h !== p.h && inCat(x, p.cat); }));
@@ -789,4 +1075,5 @@
   if (document.body.classList.contains('home')) home();
   if (document.body.classList.contains('shop')) shop();
   if (document.body.classList.contains('product')) product();
+  if (document.body.classList.contains('ask')) askrift();
 })();

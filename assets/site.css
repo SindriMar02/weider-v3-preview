@@ -6,7 +6,7 @@
 
 :root {
   --ground: #071318; --deep: #040A0D; --shot: #03070B; --surface: #0E2229; --raised: #15333C; --line: #1F3D46;
-  --ink: #F2EFE8; --mute: #8FA3A8; --panel: #F2EFE8; --card: #FFFFFF; --pink: #0B0D0E; --pmute: #5B6A6E;
+  --ink: #F2EFE8; --mute: #8FA3A8; --panel: #0A1A20; --card: #0F242B; --pink: #F2EFE8; --pmute: #93A6AB;
   --red: #D7261E; --red-t: #F05A4F;
   --serif: "Stardom", "Times New Roman", serif; --sans: "Cabinet Grotesk", system-ui, -apple-system, sans-serif;
   --pad: clamp(16px, 4vw, 56px); --r-card: 20px; --r-frame: 28px;
@@ -201,7 +201,7 @@ ul { padding: 0; list-style: none; }
 .deal-tile { position: relative; overflow: hidden; border-radius: var(--r-card); background: var(--red); color: #fff; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; min-height: 300px; }
 .deal-tile .lbl { color: rgba(255,255,255,.8); }
 .deal-tile .h2 { font-size: clamp(40px, 4vw, 60px); margin-top: auto; margin-bottom: 24px; }
-.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=658135f) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=658135f) no-repeat center / contain; pointer-events: none; }
+.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=6eaa92f) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=6eaa92f) no-repeat center / contain; pointer-events: none; }
 @media (max-width: 760px) { .deal-tile::before { left: auto; right: 18px; top: 50%; transform: translateY(-50%); width: 32%; } }
 .deal-arrows { display: flex; gap: 8px; }
 .arr { width: 46px; height: 46px; border-radius: 999px; display: grid; place-items: center; background: rgba(255,255,255,.16); color: #fff; transition: background-color .25s, opacity .25s; }
@@ -1039,3 +1039,45 @@ html.logo-off .logo-in { opacity: 0 !important; transition: opacity .25s; }
   .ax-sheet { padding-bottom: 110px; }
 }
 @media (max-width: 1100px) { .ask-build { grid-template-columns: minmax(0, 1fr); } }
+
+/* ============ ONE DARK WORLD (15 Nov): no cream sheet anywhere; light-only colours re-pointed ============ */
+.sheet { border-top: 1px solid var(--line); }
+.skip { color: var(--deep); }
+.tabs { background: var(--surface); border: 1px solid var(--line); }
+.tabs button[aria-selected="true"], .btn.ink, .bk, .qty, .fchip[aria-pressed="true"], .fchip-x, .ax-cats button[aria-pressed="true"], .ax-mode button[aria-selected="true"] { color: var(--deep); }
+.pc { box-shadow: 0 0 0 1px var(--line); }
+@media (hover: hover) { .pc:hover { box-shadow: 0 0 0 1px #2C525C, 0 28px 50px -24px rgba(0,0,0,.6); } }
+.bk[disabled] { background: var(--raised); color: var(--mute); }
+.field, .sfield, .fchip, .ssort select, .fbtn, .ab .av { border-color: var(--line); }
+.sfield:focus-within { border-color: var(--mute); box-shadow: 0 0 0 4px rgba(242,239,232,.07); }
+.svc li { background: var(--surface); }
+@media (hover: hover) { .fo:hover { background: var(--raised); } }
+.fo-box::after { border-color: var(--deep); }
+.faq .acc { border-top-color: var(--line); } .faq .acc-i { border-bottom-color: var(--line); }
+/* Áskrift on dark */
+.ax-steps { background: var(--deep); border: 1px solid var(--line); box-shadow: 0 18px 40px -22px rgba(0,0,0,.7); }
+.ax-n { border-color: var(--line); color: var(--red-t); }
+.ax-mode { background: var(--surface); border: 1px solid var(--line); }
+.ax-cats button { border-color: var(--line); }
+.ab { box-shadow: 0 0 0 1px var(--line); }
+.ab.in { box-shadow: 0 0 0 2px var(--red); }
+.ax-iv button { box-shadow: 0 0 0 1px var(--line); }
+.ax-iv i { border-color: #3A5A63; }
+.ax-iv em { color: #7FD4A0; }
+.preset { background: linear-gradient(180deg, #11272E 0%, #0B1D23 70%); box-shadow: 0 0 0 1px var(--line), 0 24px 50px -30px rgba(0,0,0,.7); }
+.preset.on { box-shadow: 0 0 0 2px var(--red), 0 24px 50px -26px rgba(215,38,30,.35); }
+.pre-go { color: var(--deep); }
+.ask-sum { background: var(--surface); border: 1px solid var(--line); }
+.ask-how li { border-top-color: var(--line); }
+.ax-bar { background: var(--deep); border: 1px solid var(--line); }
+.ax-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; background: linear-gradient(transparent, var(--panel)); pointer-events: none; }
+.ax-sheet { border-top: 0; border-radius: 0; }
+
+/* box cards: one wide row each (image left, details right) whenever there is room, so they never squeeze into narrow columns */
+.presets { grid-template-columns: minmax(0, 1fr); gap: 14px; max-width: none; container-type: inline-size; }
+@container (min-width: 600px) {
+  .preset { display: grid; grid-template-columns: minmax(0, 44%) minmax(0, 1fr); }
+  .pre-imgs { aspect-ratio: auto; height: 100%; min-height: 300px; }
+  .pre-b { padding: 26px 28px; }
+  .pre-n { font-size: 34px; }
+}

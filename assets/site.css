@@ -201,7 +201,7 @@ ul { padding: 0; list-style: none; }
 .deal-tile { position: relative; overflow: hidden; border-radius: var(--r-card); background: var(--red); color: #fff; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; min-height: 300px; }
 .deal-tile .lbl { color: rgba(255,255,255,.8); }
 .deal-tile .h2 { font-size: clamp(40px, 4vw, 60px); margin-top: auto; margin-bottom: 24px; }
-.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=ce79688) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=ce79688) no-repeat center / contain; pointer-events: none; }
+.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=fc98a14) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=fc98a14) no-repeat center / contain; pointer-events: none; }
 @media (max-width: 760px) { .deal-tile::before { left: auto; right: 18px; top: 50%; transform: translateY(-50%); width: 32%; } }
 .deal-arrows { display: flex; gap: 8px; }
 .arr { width: 46px; height: 46px; border-radius: 999px; display: grid; place-items: center; background: rgba(255,255,255,.16); color: #fff; transition: background-color .25s, opacity .25s; }
@@ -872,3 +872,10 @@ html.logo-off .logo-in { opacity: 0 !important; transition: opacity .25s; }
 }
 /* invisible until the script has set the intro's starting scale (failsafe after 3 s) */
 .js .hero:not(.go) .hero-main img { opacity: 0; animation: failsafe .01s 3s forwards; }
+
+/* spotlight photo: fixed 4:5 shape, pinned while the quick-buy column scrolls (it used to stretch to the column height and
+   zoom the pouch into a giant crop on mid-size screens) */
+@media (min-width: 901px) {
+  .spot-card { align-items: start; }
+  .spot-l { min-height: 0; aspect-ratio: 4 / 5; position: sticky; top: calc(var(--hdr) + 16px); max-height: calc(100vh - var(--hdr) - 32px); border-radius: 0 var(--r-frame) var(--r-frame) 0; }
+}

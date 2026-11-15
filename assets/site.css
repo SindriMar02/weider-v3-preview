@@ -201,7 +201,7 @@ ul { padding: 0; list-style: none; }
 .deal-tile { position: relative; overflow: hidden; border-radius: var(--r-card); background: var(--red); color: #fff; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; min-height: 300px; }
 .deal-tile .lbl { color: rgba(255,255,255,.8); }
 .deal-tile .h2 { font-size: clamp(40px, 4vw, 60px); margin-top: auto; margin-bottom: 24px; }
-.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=c4dcf5b) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=c4dcf5b) no-repeat center / contain; pointer-events: none; }
+.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=ce79688) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=ce79688) no-repeat center / contain; pointer-events: none; }
 @media (max-width: 760px) { .deal-tile::before { left: auto; right: 18px; top: 50%; transform: translateY(-50%); width: 32%; } }
 .deal-arrows { display: flex; gap: 8px; }
 .arr { width: 46px; height: 46px; border-radius: 999px; display: grid; place-items: center; background: rgba(255,255,255,.16); color: #fff; transition: background-color .25s, opacity .25s; }
@@ -847,3 +847,28 @@ html.logo-off .logo-in { opacity: 0 !important; transition: opacity .25s; }
 .goal-tabs { min-height: 51px; }
 #shop-grid { min-height: 120vh; }
 .hero-main img { will-change: transform; }
+
+/* the sticky hero sleeps under the cream sheet (no paint, no loops) */
+/* asleep = covered by the sheet: unstick it so Safari stops compositing it under the sheet (measured 48 -> 17 ms frames) */
+.hero.asleep { position: relative; visibility: hidden; }
+.cols-wrap.live .col { will-change: transform; }
+
+.hero-main img { position: absolute; left: 0; top: 0; }
+
+/* after the intro the photo's own box is the card: drop the rounded clip-path (measured ~10 ms/frame on iOS) */
+.hero.settled .hero-main { clip-path: none; }
+.hero.settled .hero-main img { border-radius: 28px; }
+
+/* no clip-path at all now: the photo is the card, scaled during the intro (transform only) */
+.hero-main { clip-path: none !important; }
+.hero-main img { border-radius: 28px; }
+
+/* the photo's card box = the .hero-frame box, in CSS from the first paint (no layout shift when the script starts) */
+.hero-main img { left: calc(50% - 23vw); top: 17%; width: 46vw; height: 64%; }
+@supports (height: 100lvh) { .hero-main img { top: calc(17% - var(--tb) / 4); } }
+@media (max-width: 760px) {
+  .hero-main img { left: calc(50% - 44vw); width: 88vw; top: 29%; height: 42%; }
+  @supports (height: 100lvh) { .hero-main img { top: calc(29% - var(--tb) / 2); height: auto; bottom: calc(26px + var(--tb) + 190px); } }
+}
+/* invisible until the script has set the intro's starting scale (failsafe after 3 s) */
+.js .hero:not(.go) .hero-main img { opacity: 0; animation: failsafe .01s 3s forwards; }

@@ -519,9 +519,10 @@
       // the cream sheet slides over the sticky hero: hero sinks and darkens underneath (video: panel slides up)
       G.timeline({ scrollTrigger: { trigger: '.sheet', start: 'top bottom', end: 'top top', scrub: .6 } })
         .to('.hero-shade', { opacity: .75, ease: 'none' }, 0)
-        .to('.hero-stage', { scale: .93, yPercent: -4, ease: 'none' }, 0);
+        .to('.hero-stage', { yPercent: -5, ease: 'none' }, 0); // no scale: measured ~10 ms/frame on iOS
       // sliding product columns: outer columns rise, middle column sinks
       var amp = function () { return innerWidth <= 860 ? 5 : 9; };
+      ST.create({ trigger: '.cols-wrap', start: 'top bottom', end: 'bottom top', toggleClass: 'live' }); // own GPU layers only while on screen
       [['.c1', 1], ['.c2', -1.3], ['.c3', 1.5]].forEach(function (c) {
         G.fromTo(c[0], { yPercent: function () { return amp() * c[1]; } }, { yPercent: function () { return -amp() * c[1]; }, ease: 'none',
           scrollTrigger: { trigger: '.cols-wrap', start: 'top bottom', end: 'bottom top', scrub: .9, invalidateOnRefresh: true } });
@@ -541,8 +542,15 @@
       var s = hero.getBoundingClientRect(), f = frame.getBoundingClientRect();
       return { '--ct': (f.top - s.top) + 'px', '--cr': (s.right - f.right) + 'px', '--cb': (s.bottom - f.bottom) + 'px', '--cl': (f.left - s.left) + 'px', '--cr0': '28px' };
     }
-    function settle() { var r = rect(); for (var k in r) main.style.setProperty(k, r[k]); }
-    addEventListener('resize', function () { if (settled) settle(); });
+    // the photo itself shrinks into the card (video reference) instead of being cropped by a window:
+    // the img's box animates from the whole hero to the frame rect, so the card always shows the full picture
+    function box() { var s0 = hero.getBoundingClientRect(), f = frame.getBoundingClientRect(); return { left: f.left - s0.left, top: f.top - s0.top, width: f.width, height: f.height }; }
+    // the photo's box is the card from the first frame (no layout animation = no layout shift); the intro only scales it
+    function settle() { hero.classList.add('settled'); } // the card box itself is CSS (same rules as .hero-frame)
+    function cover() { var s0 = hero.getBoundingClientRect(), b = box(), s = Math.min(Math.max(s0.width / b.width, s0.height / b.height) * 1.04, 1.9);
+      return { x: s0.width / 2 - (b.left + b.width / 2), y: s0.height / 2 - (b.top + b.height / 2), scale: s }; }
+    settle();
+    addEventListener('resize', settle);
     if (!G || reduce) { settled = true; settle(); hero.classList.add('go'); return; }
 
     // the header wordmark starts large in the middle of the hero and glides into its place in the header as you scroll
@@ -560,8 +568,7 @@
     G.fromTo(logoImg, { x: function () { return big().x; }, y: function () { return big().y; }, scale: function () { return big().scale; } },
       { x: 0, y: 0, scale: 1, ease: 'power1.inOut', scrollTrigger: { start: 0, end: function () { return innerHeight * .6; }, scrub: .5, invalidateOnRefresh: true } });
 
-    G.set(main, { '--ct': '0px', '--cr': '0px', '--cb': '0px', '--cl': '0px', '--cr0': '0px' });
-    G.set(img, { scale: 1.2 });
+    var c0 = cover(); G.set(img, { x: c0.x, y: c0.y, scale: c0.scale * 1.08, transformOrigin: '50% 50%' });
     G.set(logoIn, { opacity: 0, y: 40 });
     // start every card fully below the viewport (measured), invisible, so nothing peeks in during the intro
     G.set(cards, { autoAlpha: 0, y: function (i, el) { return innerHeight - el.getBoundingClientRect().top + 80 + i * 60; }, rotate: function (i) { return i ? 6 : -6; } });
@@ -570,21 +577,21 @@
     hero.classList.add('go');
     var ready = Promise.race([Promise.all([document.fonts ? document.fonts.ready : 0, img.decode ? img.decode().catch(function () {}) : 0]), new Promise(function (r) { setTimeout(r, 1200); })]);
     ready.then(function () {
-      var r = rect();
       var tl = G.timeline({ onComplete: function () {
-        settled = true; settle();
-        var loops = [G.to(img, { scale: 1.06, duration: 11, ease: 'sine.inOut', yoyo: true, repeat: -1 })]; // hold with a slow drift (video)
+        settled = true;
+        var loops = []; // the photo's slow drift was dropped in the lag purge: with no clip-path it would grow past the card, and it repainted the largest layer forever
         cards.forEach(function (c, i) { loops.push(G.to(c, { y: i ? 9 : -9, duration: 3.8 + i * .7, ease: 'sine.inOut', yoyo: true, repeat: -1 })); }); // floating
         // lag purge: the loops only run while the hero is on screen (and the tab is visible)
         var onScreen = true, setLoops = function () { loops.forEach(function (t) { onScreen && !document.hidden ? t.resume() : t.pause(); }); };
-        if (ST) ST.create({ trigger: hero, start: 'top bottom', end: 'bottom top', onToggle: function (self) { onScreen = self.isActive; setLoops(); } });
+        // the hero is sticky, so it never leaves the viewport by itself: it "sleeps" once the cream sheet fully covers it
+        // (loops paused, layer hidden so Safari stops painting it under the sheet) and wakes when the sheet slides back
+        if (ST) ST.create({ trigger: '.sheet', start: 'top top', onEnter: function () { onScreen = false; setLoops(); hero.classList.add('asleep'); }, onLeaveBack: function () { onScreen = true; setLoops(); hero.classList.remove('asleep'); } });
         document.addEventListener('visibilitychange', setLoops);
       } });
       // lag purge 15 Nov: same order, ~1 s shorter (settled by ~2.6 s instead of ~3.6 s)
-      tl.to(img, { scale: 1.08, duration: 1.3, ease: 'power2.out' }, 0)
+      tl.to(img, { scale: c0.scale, duration: .9, ease: 'power2.out' }, 0)
         .to(logoIn, { opacity: 1, y: 0, duration: 1.1, ease: 'power4.out' }, .15)
-        .to(main, Object.assign({ duration: 1.3, ease: 'expo.inOut' }, r), .7)
-        .to(img, { scale: 1, duration: 1.3, ease: 'expo.inOut' }, .7)
+        .to(img, { x: 0, y: 0, scale: 1, duration: 1.3, ease: 'expo.inOut' }, .7)
         .to(cards, { y: 0, rotate: 0, duration: 1.15, stagger: .12, ease: 'power3.out' }, 1.4)
         .to(cards, { autoAlpha: 1, duration: .45, stagger: .12, ease: 'power1.out' }, 1.4)
         .to(chrome, { opacity: 1, duration: .7, ease: 'power2.out', clearProps: 'opacity' }, 1.2)

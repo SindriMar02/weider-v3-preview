@@ -14,7 +14,7 @@
   --hdr: 76px;
 }
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: 96px; color-scheme: dark; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 124px; color-scheme: dark; }
 a, button, input, select { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .h1, .h2, .h3, .pc-n, .dc-n { text-wrap: balance; }
 .price-l, .pc-p, .dc-p, .line-p, .dr-total, .stat strong { font-variant-numeric: tabular-nums; }
@@ -595,3 +595,13 @@ html.js body.home .logo-in { opacity: 0; animation: failsafe .01s 3s forwards; }
 }
 
 html.logo-off .logo-in { opacity: 0 !important; transition: opacity .25s; }
+
+/* iOS pass 15 Nov */
+.sclear[hidden] { display: none; }
+/* Safari's floating toolbar overlays the page: size the hero to the large viewport so the cream sheet's top edge
+   never peeks out as a stray line above the toolbar, and lift the hero copy by the toolbar's height */
+@supports (height: 100lvh) {
+  .hero { height: 100lvh; }
+  .hero-b { bottom: calc(clamp(28px, 6vh, 64px) + (100lvh - 100svh)); }
+  @media (max-width: 760px) { .hero-b { bottom: calc(26px + (100lvh - 100svh)); } }
+}

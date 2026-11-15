@@ -433,10 +433,15 @@
     // the header wordmark starts large in the middle of the hero and glides into its place in the header as you scroll
     function big() {
       var n = logoA.getBoundingClientRect(), phone = innerWidth <= 760;
-      var w = phone ? innerWidth * .8 : Math.min(innerWidth * .52, 860), s = w / n.width;
+      var w = phone ? innerWidth * .8 : Math.min(innerWidth * .52, 860);
+      w = Math.min(w, innerHeight * .24 * (n.width / n.height)); // short screens (phone landscape): never taller than ~a quarter of the view
+      var s = w / n.width, h = n.height * s;
       var cy = phone ? (innerHeight * .29 + 76) / 2 + 6 : innerHeight * .5;
+      cy = Math.max(cy, 76 + h / 2 + 12); // keep it clear of the header icons
       return { x: innerWidth / 2 - w / 2 - n.left, y: cy - n.height * s / 2 - n.top, scale: s };
     }
+    // the small "Weider — síðan 1936" line steps aside as the wordmark starts to move
+    G.to('.hero-k', { opacity: 0, y: -10, ease: 'none', scrollTrigger: { start: 0, end: function () { return innerHeight * .15; }, scrub: .3 } });
     G.fromTo(logoImg, { x: function () { return big().x; }, y: function () { return big().y; }, scale: function () { return big().scale; } },
       { x: 0, y: 0, scale: 1, ease: 'power1.inOut', scrollTrigger: { start: 0, end: function () { return innerHeight * .6; }, scrub: .5, invalidateOnRefresh: true } });
 

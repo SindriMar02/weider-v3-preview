@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#071318">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/Stardom-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/CabinetGrotesk-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<script>(function(){var r=document.documentElement;r.classList.add('js');function s(v){if(r.getAttribute('data-input')!==v)r.setAttribute('data-input',v)}addEventListener('pointerdown',function(){s('pointer')},true);addEventListener('keydown',function(e){if(e.key==='Shift'||e.key==='Control'||e.key==='Alt'||e.key==='Meta')return;s('key')},true)})();</script>
+<script src="assets/vendor/focus-guard.js"></script>
+<link rel="stylesheet" href="assets/vendor/focus-guard.css">
+<link rel="stylesheet" href="assets/site.css">
+
+<title>Weider á Íslandi · Fæðubótarefni síðan 1936</title>
+<meta name="description" content="Weider prótein, kreatín, pre-workout og vítamín. Sending með Dropp á 1–2 virkum dögum.">
+</head>
+<body class="home">
+<a class="skip" href="#main">Hoppa í efni</a>
+<header class="hdr" id="hdr">
+  <a class="logo" href="index.html" aria-label="Weider, forsíða"><span class="logo-in"><img src="assets/logo/weider-white.webp" alt="Weider" width="720" height="170"></span></a>
+  <nav class="pills" aria-label="Aðalvalmynd">
+    <button class="shop-btn" type="button" aria-expanded="false" aria-controls="mega">Verslun <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <a href="vorur.html?c=protein" data-nav="protein">Prótein</a>
+    <a href="vorur.html?c=kreatin" data-nav="kreatin">Kreatín</a>
+    <a href="vorur.html?c=pre" data-nav="pre">Pre-workout</a>
+    <a href="vorur.html?c=vitamin" data-nav="vitamin">Vítamín</a>
+  </nav>
+  <div class="mega" id="mega" tabindex="-1" role="region" aria-label="Allir vöruflokkar" hidden>
+    <div class="mega-grid"></div>
+    <div class="mega-f"><button class="mega-s srch-btn" type="button" aria-controls="srch" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><span>Leita að vöru, bragði eða flokki…</span><kbd class="kbd">⌘K</kbd></button><a class="mega-all" href="vorur.html">Sjá allar vörur</a></div>
+  </div>
+  <div class="hdr-r">
+    <button class="ico srch-btn" type="button" aria-label="Leita (⌘K)" aria-controls="srch" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><kbd class="kbd" aria-hidden="true">⌘K</kbd></button>
+    <button class="cart-btn" type="button" aria-label="Karfa, 0 vörur" aria-controls="cart" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="cart-n">0</span></button>
+    <button class="menu-btn" type="button" aria-label="Opna valmynd" aria-controls="mnav" aria-expanded="false"><span></span><span></span></button>
+  </div>
+</header>
+<div class="srch" id="srch" role="dialog" aria-modal="true" aria-label="Leita í vörum" hidden>
+  <div class="srch-scrim"></div>
+  <div class="srch-p" tabindex="-1">
+    <div class="srch-f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><label class="sr" for="sq">Leita í vörum</label><input id="sq" type="search" role="combobox" aria-expanded="true" aria-controls="srch-l" aria-autocomplete="list" placeholder="Leita að vöru, bragði eða flokki…" autocomplete="off" spellcheck="false" enterkeyhint="search"><button class="srch-x" type="button" aria-label="Loka leit"><kbd class="kbd">Esc</kbd><span class="srch-xt" aria-hidden="true">Loka</span></button></div>
+    <div class="srch-b" id="srch-b"></div>
+    <p class="srch-hint" aria-hidden="true"><span><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> velja</span><span><kbd class="kbd">Enter</kbd> opna</span><span><kbd class="kbd">Esc</kbd> loka</span></p>
+    <p class="sr" id="srch-live" role="status" aria-live="polite"></p>
+  </div>
+</div>
+<div class="mnav" id="mnav" tabindex="-1" role="dialog" aria-modal="true" aria-label="Valmynd" hidden>
+  <nav aria-label="Valmynd">
+    <a href="vorur.html">Allar vörur</a>
+    <a href="vorur.html?c=protein">Prótein</a>
+    <a href="vorur.html?c=kreatin">Kreatín</a>
+    <a href="vorur.html?c=pre">Pre-workout blöndur</a>
+    <a href="vorur.html?c=amino">Amínósýrur</a>
+    <a href="vorur.html?c=snarl">Prótein-snarl &amp; drykkir</a>
+    <a href="vorur.html?c=vitamin">Vítamín og steinefni</a>
+    <a href="vorur.html?c=aukahlutir">Aukahlutir</a>
+  </nav>
+  <p class="mnav-f">Sending með Dropp á 1–2 virkum dögum</p>
+</div>
+
+<main id="main">
+
+  <!-- HERO: full-bleed photo shrinks into a framed card, cards rise, the word inverts over them (video teardown) -->
+  <div class="stack">
+  <section class="hero" aria-labelledby="hero-t">
+    <div class="hero-stage">
+      <div class="hero-frame" aria-hidden="true"></div>
+      <figure class="hero-main"><picture><source media="(max-width: 760px)" srcset="assets/img/hero/whey-900.webp 900w, assets/img/hero/whey-1400.webp 1400w" sizes="100vw"><img src="assets/img/hero/lift-1600.webp" srcset="assets/img/hero/lift-900.webp 900w, assets/img/hero/lift-1600.webp 1600w, assets/img/hero/lift-2400.webp 2400w" sizes="100vw" alt="Dimmur lyftingasalur, krítaðar hendur og hlaðin stöng" width="2400" height="1350" fetchpriority="high"></picture></figure>
+      <a class="hero-card hc-a" href="vara.html?h=premium-whey"><span class="hc-img"><img src="assets/img/p/premium-whey-600.webp" alt="" width="600" height="800"></span><span class="hc-cap"><span><b>Premium Whey</b><small>frá 3.990 kr.</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></span></a>
+      <a class="hero-card hc-b" href="vara.html?h=micronized-creatine"><span class="hc-img"><img src="assets/img/p/micronized-creatine-600.webp" alt="" width="600" height="800"></span><span class="hc-cap"><span><b>Micronized Creatine</b><small>3.990 kr.</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></span></a>
+      <div class="hero-shade" aria-hidden="true"></div>
+      <h1 class="sr" id="hero-t">Weider á Íslandi: prótein, kreatín og fæðubótarefni síðan 1936</h1>
+    </div>
+    <div class="hero-ui">
+      <p class="hero-k"><span>Weider</span><span>síðan 1936</span></p>
+      <div class="hero-b">
+        <p class="hero-p">Prótein, kreatín og orka sem íþróttafólk hefur treyst í 90 ár. Sent heim með Dropp á 1–2 virkum dögum.</p>
+        <div class="hero-cta"><a class="btn red" href="vorur.html">Versla núna</a><a class="btn ghost" href="#mest">Mest keypt</a></div>
+      </div>
+      <div class="hero-scroll" aria-hidden="true"><span></span></div>
+    </div>
+  </section>
+
+  <!-- CREAM SHEET slides up over the sticky hero (NYRO shop panel) -->
+  <div class="sheet">
+    <ul class="svc" aria-label="Þjónusta">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span><b>Sent á 1–2 virkum dögum</b>með Dropp, um allt land</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/></svg><span><b>14 daga skilaréttur</b>einfalt og án vesens</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg><span><b>Weider síðan 1936</b>þýsk gæði í 90 ár</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1"/></svg><span><b>Spurningar?</b><a href="tel:+3547700295">770 0295</a></span></li>
+    </ul>
+    <section class="best" id="mest" aria-labelledby="best-t">
+      <div class="sec-h center">
+        <p class="lbl">Verslun</p>
+        <h2 class="h2" id="best-t">Mest keypt</h2>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Flokkar">
+        <span class="tab-ind" aria-hidden="true"></span>
+      </div>
+      <div class="grid best-grid" id="best-grid" role="tabpanel" aria-live="polite"></div>
+      <div class="center"><a class="btn ink" href="vorur.html">Sjá allar vörur</a></div>
+    </section>
+
+    <!-- NEW-IN SLIDER (NYRO "Good Deals" row) -->
+    <section class="deals" aria-labelledby="deal-t">
+      <div class="deal-tile">
+        <p class="lbl">Nýtt</p>
+        <h2 class="h2" id="deal-t">Nýkomið í búðina</h2>
+        <div class="deal-arrows"><button class="arr prev" type="button" aria-label="Fyrri vörur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><button class="arr next" type="button" aria-label="Næstu vörur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+      </div>
+      <div class="rail" id="new-rail" tabindex="0" aria-label="Nýjar vörur, renndu til hliðar"></div>
+    </section>
+  </div>
+  </div>
+
+  <!-- SLIDING COLUMNS: three columns of lit products drift against each other while you scroll -->
+  <section class="cols" aria-labelledby="cols-t">
+    <div class="cols-h">
+      <p class="lbl">Úrvalið</p>
+      <h2 class="h1" id="cols-t">Allt sem <em>æfingin</em> þarf</h2>
+      <p class="cols-p">Átján lykilvörur, myndaðar eins og þær eiga skilið. Veldu flokk eða skoðaðu allt úrvalið.</p>
+      <a class="btn ghost" href="vorur.html">Skoða allar 49 vörurnar</a>
+    </div>
+    <div class="cols-wrap">
+      <div class="col c1"></div>
+      <div class="col c2"></div>
+      <div class="col c3"></div>
+    </div>
+  </section>
+
+  <!-- SPOTLIGHT (Jetset product page composition on the home page) -->
+  <section class="spot" aria-labelledby="spot-t">
+    <div class="spot-card">
+      <div class="spot-l">
+        <img class="spot-img" src="assets/img/p/premium-whey-1100.webp" alt="Weider Premium Whey, Vanilla Ice Cream, 500 g" width="1100" height="1467" loading="lazy">
+        <a class="spot-more" href="vara.html?h=premium-whey"><span>Næringargildi</span><i aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg></i></a>
+        <div class="stat"><p><span class="lbl">Prótein</span><strong>78<small>g</small></strong><span class="per">í 100 g</span></p><p><span class="lbl">Orka</span><strong>393<small>kcal</small></strong><span class="per">í 100 g</span></p></div>
+      </div>
+      <div class="spot-r">
+        <div class="spot-top" id="quick"></div>
+        <div class="spot-rel">
+          <p class="kick it">Önnur prótein sem þér gæti líkað…</p>
+          <div class="arches"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOP BY GOAL -->
+  <section class="goals" aria-labelledby="goals-t">
+    <div class="sec-h"><p class="lbl">Verslaðu eftir markmiði</p><h2 class="h2" id="goals-t">Hvað viltu ná fram?</h2></div>
+    <div class="goal-row" id="goal-row"></div>
+  </section>
+
+</main>
+<footer class="ftr">
+  <div class="ftr-top">
+    <div class="ftr-news">
+      <p class="lbl">Fréttabréf</p>
+      <h2 class="h2">Fáðu nýjungar og tilboð fyrst.</h2>
+      <form class="news" novalidate>
+        <label class="sr" for="nl">Netfang</label>
+        <input id="nl" type="email" name="email" placeholder="nafn@dæmi.is" autocomplete="email" spellcheck="false" required>
+        <button class="btn red" type="submit">Skrá mig</button>
+        <p class="news-msg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+    <nav class="ftr-cols" aria-label="Fótur">
+      <div><p class="lbl">Verslun</p><a href="vorur.html?c=protein">Prótein</a><a href="vorur.html?c=kreatin">Kreatín</a><a href="vorur.html?c=pre">Pre-workout</a><a href="vorur.html?c=amino">Amínósýrur</a><a href="vorur.html?c=vitamin">Vítamín</a></div>
+      <div><p class="lbl">Þjónusta</p><span>Sending með Dropp, 1–2 virkir dagar</span><span>14 daga skilaréttur</span><a href="tel:+3547700295">770 0295</a><a href="mailto:weidervorur@gmail.com">weidervorur@gmail.com</a></div>
+    </nav>
+  </div>
+  <img class="ftr-logo" src="assets/logo/weider-white.webp" alt="" width="720" height="170" loading="lazy">
+  <div class="ftr-legal"><span>Aura ehf. · kt. 560925-0500 · VSK 158878 · Austurkór 65, 203 Kópavogur</span><span>Frumgerð frá SNDR Studio · ekkert er selt hér</span></div>
+</footer>
+<div class="scrim" hidden></div>
+<aside class="drawer" id="cart" tabindex="-1" role="dialog" aria-modal="true" aria-label="Karfa" hidden>
+  <div class="dr-h"><h2 class="h3">Karfan</h2><button class="x" type="button" aria-label="Loka körfu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="dr-list"></div>
+  <div class="dr-f"><div class="dr-sum"><span>Samtals</span><strong class="dr-total">0 kr.</strong></div><p class="dr-note">Sending reiknast í næsta skrefi.</p><button class="btn red wide dr-go" type="button">Áfram í greiðslu</button><p class="dr-msg" role="status" aria-live="polite"></p></div>
+</aside>
+<script src="assets/vendor/gsap.min.js" defer></script>
+<script src="assets/vendor/ScrollTrigger.min.js" defer></script>
+<script src="assets/data.js" defer></script>
+<script src="assets/site.js" defer></script>
+
+</body>
+</html>

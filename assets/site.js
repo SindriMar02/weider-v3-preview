@@ -142,19 +142,22 @@
     $('.dr-go', drawer).addEventListener('click', function () { $('.dr-msg', drawer).textContent = 'Þetta er frumgerð: greiðsla er ekki tengd og ekkert er pantað.'; });
   }
 
+  /* the home wordmark is still large over the hero until it docks: hide it while a menu covers the page */
+  function logoOff(on) { document.documentElement.classList.toggle('logo-off', !!on && document.body.classList.contains('home') && scrollY < innerHeight * .6); }
+
   /* ---------- menu ---------- */
   var mnav = $('#mnav'), menuBtn = $('.menu-btn');
   function closeMenu() {
     if (!mnav || mnav.hidden) return;
     var go = function () { mnav.hidden = true; };
     if (G && !reduce) G.to(mnav, { opacity: 0, duration: .25, onComplete: go }); else go();
-    menuBtn.setAttribute('aria-expanded', 'false'); menuBtn.setAttribute('aria-label', 'Opna valmynd');
+    menuBtn.setAttribute('aria-expanded', 'false'); menuBtn.setAttribute('aria-label', 'Opna valmynd'); logoOff(false);
     lock(false); menuBtn.focus({ preventScroll: true });
   }
   if (mnav && menuBtn) {
     menuBtn.addEventListener('click', function (e) {
       if (!mnav.hidden) { closeMenu(); return; }
-      mnav.hidden = false; lock(true);
+      mnav.hidden = false; lock(true); logoOff(true);
       menuBtn.setAttribute('aria-expanded', 'true'); menuBtn.setAttribute('aria-label', 'Loka valmynd');
       var links = $$('nav a', mnav);
       if (G && !reduce) {
@@ -172,7 +175,7 @@
   var mega = $('#mega'), shopBtn = $('.shop-btn');
   function closeMega(refocus) {
     if (!mega || mega.hidden) return;
-    shopBtn.setAttribute('aria-expanded', 'false');
+    shopBtn.setAttribute('aria-expanded', 'false'); logoOff(false);
     var go = function () { mega.hidden = true; };
     if (G && !reduce) G.to(mega, { opacity: 0, y: -6, duration: .2, ease: 'power2.in', overwrite: true, onComplete: go }); else go();
     if (refocus && mega.contains(document.activeElement)) shopBtn.focus({ preventScroll: true });
@@ -184,7 +187,7 @@
     }).join('');
     shopBtn.addEventListener('click', function (e) {
       if (!mega.hidden && shopBtn.getAttribute('aria-expanded') === 'true') { closeMega(); return; }
-      closeCart(); mega.hidden = false; shopBtn.setAttribute('aria-expanded', 'true');
+      closeCart(); mega.hidden = false; shopBtn.setAttribute('aria-expanded', 'true'); logoOff(true);
       if (G && !reduce) {
         G.fromTo(mega, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: .35, ease: 'power3.out', overwrite: true });
         G.fromTo($$('.mega-c', mega), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .45, stagger: .03, ease: 'power3.out' });

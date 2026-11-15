@@ -593,3 +593,5 @@ html.js body.home .logo-in { opacity: 0; animation: failsafe .01s 3s forwards; }
   .hero-card { transition: box-shadow .6s var(--ease); }
   .hero-card:hover { box-shadow: 0 60px 100px -30px rgba(0,0,0,1), 0 0 0 1px rgba(242,239,232,.25); }
 }
+
+html.logo-off .logo-in { opacity: 0 !important; transition: opacity .25s; }

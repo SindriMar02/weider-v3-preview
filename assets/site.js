@@ -14,7 +14,7 @@
   var kr = function (n) { return n.toLocaleString('de-DE') + ' kr.'; };
   var nVara = function (n) { return n + (n % 10 === 1 && n % 100 !== 11 ? ' vara' : ' vörur'); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  // 18 curated photographs (Higgsfield GPT Image 2, one locked petrol-studio set). Everything else: official render on a CSS stage.
+  // 18 Nov: the catalogue is cut to the 22 products with a Seedream low-key hero photo (tools/curate-catalogue.py); PHOTO = the hero columns.
   var PHOTO = ['premium-whey', 'micronized-creatine', 'total-rush', 'gold-whey', 'premium-creatin-watermelon', 'protein-80-plus',
     'premium-bcaa-8-1-1-l-glutamine-500gr', 'rush-pump-sauerkirsche', 'plant-based-protein', 'pure-creatine', 'premium-creatine-gummies',
     'rush-ready-to-drink', 'omega-3-superior', 'premium-hydration', 'whey-wafer', 'vitamin-d3-k2-kapseln', 'magnesium-gummi', 'ashwagandha-gummi'];
@@ -352,7 +352,7 @@
     var name = p.t.replace(/\s+\d[\d.,]*\s*(g|kg).*$/i, '');
     root.innerHTML = '<p class="kick">Í sviðsljósinu</p><h2 class="h1" id="spot-t">' + esc(name) + '</h2><p class="spot-p">' + esc(short(p)) + '</p>' +
       p.opts.map(function (o, oi) {
-        return '<div class="opt" role="group" aria-labelledby="qo' + oi + '"><span class="lbl" id="qo' + oi + '">' + esc(o.name) + ': <span class="ov"></span></span><div class="opt-v">' +
+        return '<div class="opt' + (o.values.length === 1 ? ' one' : '') + '" role="group" aria-labelledby="qo' + oi + '"><span class="lbl" id="qo' + oi + '">' + esc(o.name) + ': <span class="ov"></span></span><div class="opt-v">' +
           o.values.map(function (v) { return '<button type="button" data-o="' + oi + '" data-val="' + esc(v) + '">' + esc(v) + '</button>'; }).join('') + '</div></div>';
       }).join('') +
       pmHTML('q') + '<div class="buy"><span class="price-l" data-q-price></span><div class="qty"><button type="button" data-qq="-1" aria-label="Fækka">' + ICON.minus + '</button><span data-q-n>1</span><button type="button" data-qq="1" aria-label="Fjölga">' + ICON.plus + '</button></div>' + atcHTML('data-q-add') + '</div>' +
@@ -505,7 +505,6 @@
       ['protein', 'Byggja upp', 'Prótein fyrir og eftir æfingu', 'premium-whey'],
       ['kreatin', 'Meiri kraftur', 'Kreatín í dufti, töflum og gúmmíi', 'micronized-creatine'],
       ['pre', 'Orka á æfingu', 'Pre-workout og orkudrykkir', 'total-rush'],
-      ['amino', 'Endurheimt', 'BCAA, EAA og glútamín', 'premium-bcaa-8-1-1-l-glutamine-500gr'],
       ['vitamin', 'Daglega heilsan', 'Vítamín, steinefni og omega', 'omega-3-superior'],
       ['snarl', 'Á ferðinni', 'Próteinstykki, snarl og drykkir', 'whey-wafer']
     ];
@@ -673,7 +672,7 @@
   };
   var PRESETS = [
     ['Grunnurinn', 'Prótein + kreatín fyrir daglega æfingu', [['premium-whey', '500 g'], ['pure-creatine', '250 g']]],
-    ['Styrkur', 'Stóri pokinn af próteini + kreatín', [['gold-whey', '2 kg'], ['micronized-creatine']]],
+    ['Styrkur', 'Prótein, kreatín, orka og endurheimt í einu boxi', [['gold-whey'], ['micronized-creatine'], ['total-rush'], ['premium-bcaa-8-1-1-l-glutamine-500gr']]],
     ['Orka & endurheimt', 'Fyrir æfingu og eftir', [['total-rush'], ['premium-bcaa-8-1-1-l-glutamine-500gr'], ['micronized-creatine']]]
   ];
   function boxMath(lines, wk) {
@@ -854,10 +853,12 @@
   }
   function askTeaser() {
     var el = $('#ask-teaser'); if (!el) return;
-    var lines = [{ h: 'gold-whey', vi: bestV(byH['gold-whey'], '2 kg'), q: 1 }, { h: 'micronized-creatine', vi: bestV(byH['micronized-creatine']), q: 1 }], m = boxMath(lines, 4);
-    var nm = function (l) { var p = byH[l.h]; return esc(p.t.replace(/\s+\d[\d.,–\s]*(g|kg)\b.*$/i, '')) + (many(p) ? ' <small>' + esc(p.v[l.vi].t.split(' / ').pop()) + '</small>' : ''); };
-    el.innerHTML = '<div class="at-stage">' + lines.map(function (l, i) { return '<span class="at-c at-c' + i + '">' + ph(byH[l.h]) + '</span>'; }).join('') +
-      '<span class="at-badge"><b>−15%</b><small>af öllu boxinu</small></span></div>' +
+    // the Styrkur box from the Áskrift page (18 Nov catalogue cut: one variant per product, so the box is four products)
+    var lines = PRESETS[1][2].map(function (x) { return { h: x[0], vi: bestV(byH[x[0]], x[1]), q: 1 }; }), m = boxMath(lines, 4);
+    var TN = { 'gold-whey': 'Gold Whey', 'micronized-creatine': 'Kreatín', 'total-rush': 'Total Rush', 'premium-bcaa-8-1-1-l-glutamine-500gr': 'BCAA' };
+    var nm = function (l) { var p = byH[l.h]; return esc(TN[l.h] || p.t.replace(/\s+\d[\d.,–\s]*(g|kg)\b.*$/i, '')); };
+    el.innerHTML = '<div class="at-stage">' + lines.slice(0, 2).map(function (l, i) { return '<span class="at-c at-c' + i + '">' + ph(byH[l.h]) + '</span>'; }).join('') +
+      '<span class="at-badge"><b>−' + pct(m.rate) + '</b><small>af öllu boxinu</small></span></div>' +
       '<div class="at-b"><div class="at-top"><span class="lbl">Styrkur-boxið</span><span class="at-iv">Mánaðarlega · frí heimsending</span></div>' +
       '<p class="at-n">' + lines.map(nm).join('<i>+</i>') + '</p>' +
       '<div class="at-p"><s>' + kr(m.full) + '</s><strong>' + kr(m.pay) + '</strong><span>á mánuði</span></div>' +
@@ -877,7 +878,7 @@
     byggja: ['premium-whey', 'gold-whey', 'protein-80-plus', 'plant-based-protein', 'mega-mass-4000-probierbeutel', 'protein-cups', 'whey-wafer'],
     kraftur: P.filter(function (p) { return p.cats.indexOf('kreatin') > -1; }).map(function (p) { return p.h; }),
     orka: P.filter(function (p) { return p.cats.indexOf('pre') > -1; }).map(function (p) { return p.h; }).concat(['premium-hydration']),
-    endurheimt: P.filter(function (p) { return p.cats.indexOf('amino') > -1; }).map(function (p) { return p.h; }).concat(['premium-hydration', 'magnesium-caps']),
+    endurheimt: P.filter(function (p) { return p.cats.indexOf('amino') > -1; }).map(function (p) { return p.h; }).concat(['premium-hydration', 'magnesium-gummi']),
     svefn: ['melatonin-gummies', 'ashwagandha-pro', 'ashwagandha-gummi', 'magnesium-gummi', 'magnesium-caps'],
     ferd: ['rush-ready-to-drink', 'protein-cups', 'whey-wafer', 'premium-hydration', 'mega-mass-4000-probierbeutel', 'mega-mass-pump-probierbeutel', 'weider-r-shaker']
   };
@@ -901,6 +902,8 @@
     { k: 'a', label: 'Eiginleikar', opts: [['stock', 'Á lager'], ['new', 'Nýtt'], ['vegan', 'Vegan'], ['sub', 'Hægt í áskrift']], test: function (p, v) {
       return v === 'stock' ? p.avail : v === 'new' ? p.new : v === 'vegan' ? p.vegan : formOf(p) !== 'prufa' && formOf(p) !== 'auka'; } }
   ];
+  // 18 Nov catalogue cut: drop filter options no product matches (e.g. 'Prufur'), so no dead, greyed-out choices show
+  FACETS.forEach(function (f) { f.opts = f.opts.filter(function (o) { return P.some(function (p) { return f.test(p, o[0]); }); }); });
   function shop() {
     var grid = $('#shop-grid'), box = $('#shop-tabs'), q = $('#leit'), sort = $('#sort'), out = $('#shop-n'), panel = $('#fpanel'), fact = $('#fact');
     var params = new URLSearchParams(location.search);
@@ -1048,7 +1051,7 @@
       }).join('') + '</div>' : '');
     info.innerHTML = '<p class="kick">' + esc(catLabel[p.cat]) + '</p><h1 class="h1">' + esc(p.t) + '</h1><p class="pdp-s">' + esc(short(p)) + '</p>' +
       p.opts.map(function (o, oi) {
-        return '<div class="opt" role="group" aria-labelledby="ol' + oi + '"><span class="lbl" id="ol' + oi + '">' + esc(o.name) + ': <span class="ov"></span></span><div class="opt-v">' +
+        return '<div class="opt' + (o.values.length === 1 ? ' one' : '') + '" role="group" aria-labelledby="ol' + oi + '"><span class="lbl" id="ol' + oi + '">' + esc(o.name) + ': <span class="ov"></span></span><div class="opt-v">' +
           o.values.map(function (v) { return '<button type="button" data-o="' + oi + '" data-val="' + esc(v) + '">' + esc(v) + '</button>'; }).join('') + '</div></div>';
       }).join('') +
       pmHTML('p') + '<div class="buy"><span class="price-l" id="pp"></span><div class="qty"><button type="button" data-pq="-1" aria-label="Fækka">' + ICON.minus + '</button><span id="pq">1</span><button type="button" data-pq="1" aria-label="Fjölga">' + ICON.plus + '</button></div>' + atcHTML('id="padd"') + '</div>' +

@@ -559,25 +559,29 @@
         if (over) return; over = true; removeEventListener('resize', place);
         ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { removeEventListener(t, skip, true); });
         var t = G.timeline({ onComplete: function () { el.remove(); root.classList.remove('ldr-on'); } });
-        var m = !fast && rest ? 1 : 0; // glide up into the lockup first, then the wordmark fades in under him
-        if (m) t.to(box, { x: rest.x, y: rest.y, scale: rest.scale, transformOrigin: '0 0', duration: .95, ease: 'power3.inOut' }, 0);
-        t.to(logoIn, { opacity: 1, y: 0, duration: fast ? .45 : .9, ease: 'power3.out' }, fast ? 0 : m ? .55 : .2)
-          .add(function () { done(true); }, fast ? .1 : m ? 1.3 : .75)
-          .to(box, m ? { opacity: 0, duration: .6, ease: 'power2.in' } : { opacity: 0, y: -24, duration: fast ? .35 : .7, ease: 'power2.in' }, fast ? .05 : m ? 1.35 : .75)
-          .to(el, { opacity: 0, duration: fast ? .4 : .8, ease: 'power2.inOut' }, fast ? .1 : m ? 1.4 : .85);
+        var m = !fast && rest ? 1 : 0;
+        // one overlapping move (18 Nov "a bit dragged out"): he glides up while settling, the wordmark fades in under him,
+        // the loader colour lifts and the hero intro starts underneath, all inside ~1.3 s
+        if (m) t.to(box, { x: rest.x, y: rest.y, scale: rest.scale, transformOrigin: '0 0', duration: .8, ease: 'power3.inOut' }, 0);
+        // (the man is screen-blended on the loader colour, so he leaves together with it rather than on his own)
+        t.to(logoIn, { opacity: 1, y: 0, duration: fast ? .45 : .6, ease: 'power2.out' }, fast ? 0 : m ? .48 : .1)
+          .add(function () { done(true); }, fast ? .1 : m ? .6 : .3)
+          .to(el, { opacity: 0, duration: fast ? .4 : .6, ease: 'power2.inOut' }, fast ? .1 : m ? .78 : .35);
       }
       function skip() { v.pause(); finish(true); }
       ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { addEventListener(t, skip, { capture: true, passive: true }); });
       G.from(box, { opacity: 0, scale: .96, duration: .6, ease: 'power2.out' });
-      v.addEventListener('ended', function () { setTimeout(finish, 120); });
-      // the clip ends on ~1 s of the still logo pose: start gliding up as he settles instead of waiting it out
-      v.addEventListener('timeupdate', function () { if (v.duration && v.currentTime > v.duration - .55) finish(); });
-      v.playbackRate = 1.2;
+      v.addEventListener('ended', function () { finish(); });
+      // the clip opens and ends on still frames: skip the first 0.35 s, play at 1.45x and start the glide while he is
+      // still settling (0.9 s of clip before the end), checked every frame rather than on the coarse timeupdate event
+      try { v.currentTime = .35; } catch (e) {}
+      (function watch() { if (over) return; if (v.duration && v.currentTime > v.duration - .9) return finish(); requestAnimationFrame(watch); })();
+      v.playbackRate = 1.45;
       var p = v.play(); started = true;
       if (p && p.catch) p.catch(function () { setTimeout(finish, 600); }); // autoplay refused: show the resting man, then go on
       // never hold the page hostage: a stalled clip ends the loader
       setTimeout(function () { if (!over && (v.readyState < 2 || v.paused)) finish(); }, 2500);
-      setTimeout(function () { finish(); }, 7500);
+      setTimeout(function () { finish(); }, 6000);
     });
   }
 

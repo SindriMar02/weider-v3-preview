@@ -531,63 +531,10 @@
     reveals('.svc li, .best .sec-h, .best .tabs, .deal-tile, .cols-h > *, .spot-top, .spot-rel, .stat, .goals .sec-h, .goal');
   }
 
-  /* ---------- LOADER (18 Nov): the Weider man from the logo comes to life, flexes, rests in the logo pose, then the real
-     header wordmark fades in exactly where it sits on the landing page and the loader dissolves into the hero intro ---------- */
-  function loader(logoImg, logoIn) {
-    var root = document.documentElement, el = $('#ldr');
-    if (!el || !root.classList.contains('ldr-on') || !G) { root.classList.remove('ldr-on'); return Promise.resolve(false); }
-    var v = $('video', el), box = $('.ldr-man', el);
-    // lockup geometry from the official bust logo (900 px wide wordmark): man 581 x 533 px, 62 px above the wordmark,
-    // centre 17 px left of the wordmark centre; in the clip the man fills 793 x 728 of 1280 px, top-left at 243.5, 276
-    var rest = null; // where the man glides to (the logo lockup above the wordmark) once he has flexed
-    function geo(mh, cx, manTop) { var V = mh / (728 / 1280); return { width: V, height: V, left: cx - V / 2, top: manTop - V * 276 / 1280 }; }
-    // every screen: he comes alive and flexes in the centre of the screen, then glides up and settles into the logo
-    // lockup above the wordmark (header chrome is hidden during the loader, so the space up to the top edge is free)
-    function place() {
-      var r = logoImg.getBoundingClientRect(), k = r.width / 900, gap = 62 * k, cx = r.left + r.width / 2 - 17 * k;
-      var play = Math.max(140, Math.min(innerHeight * .42, innerWidth * .6 * 533 / 581, 440));
-      var pg = geo(play, innerWidth / 2, innerHeight / 2 - play / 2);
-      var rm = Math.max(56, Math.min(533 * k, r.top - 14 - gap)), rg = geo(rm, cx, r.top - gap - rm);
-      G.set(box, pg); rest = { x: rg.left - pg.left, y: rg.top - pg.top, scale: rg.width / pg.width };
-    }
-    G.set(logoIn, { y: 0 }); // fades in exactly where it sits: no slide
-    place(); addEventListener('resize', place);
-    return new Promise(function (done) {
-      var over = false, started = false;
-      function finish(fast) {
-        if (over) return; over = true; removeEventListener('resize', place);
-        ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { removeEventListener(t, skip, true); });
-        var t = G.timeline({ onComplete: function () { el.remove(); root.classList.remove('ldr-on'); } });
-        var m = !fast && rest ? 1 : 0;
-        // one overlapping move (18 Nov "a bit dragged out"): he glides up while settling, the wordmark fades in under him,
-        // the loader colour lifts and the hero intro starts underneath, all inside ~1.3 s
-        if (m) t.to(box, { x: rest.x, y: rest.y, scale: rest.scale, transformOrigin: '0 0', duration: .8, ease: 'power3.inOut' }, 0);
-        // (the man is screen-blended on the loader colour, so he leaves together with it rather than on his own)
-        t.to(logoIn, { opacity: 1, y: 0, duration: fast ? .45 : .6, ease: 'power2.out' }, fast ? 0 : m ? .48 : .1)
-          .add(function () { done(true); }, fast ? .1 : m ? .6 : .3)
-          .to(el, { opacity: 0, duration: fast ? .4 : .6, ease: 'power2.inOut' }, fast ? .1 : m ? .78 : .35);
-      }
-      function skip() { v.pause(); finish(true); }
-      ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { addEventListener(t, skip, { capture: true, passive: true }); });
-      G.from(box, { opacity: 0, scale: .96, duration: .6, ease: 'power2.out' });
-      v.addEventListener('ended', function () { finish(); });
-      // the clip opens and ends on still frames: skip the first 0.35 s, play at 1.45x and start the glide while he is
-      // still settling (0.9 s of clip before the end), checked every frame rather than on the coarse timeupdate event
-      try { v.currentTime = .35; } catch (e) {}
-      (function watch() { if (over) return; if (v.duration && v.currentTime > v.duration - .9) return finish(); requestAnimationFrame(watch); })();
-      v.playbackRate = 1.45;
-      var p = v.play(); started = true;
-      if (p && p.catch) p.catch(function () { setTimeout(finish, 600); }); // autoplay refused: show the resting man, then go on
-      // never hold the page hostage: a stalled clip ends the loader
-      setTimeout(function () { if (!over && (v.readyState < 2 || v.paused)) finish(); }, 2500);
-      setTimeout(function () { finish(); }, 6000);
-    });
-  }
-
   function heroIntro() {
     var hero = $('.hero'); if (!hero) return;
     var main = $('.hero-main'), img = $('img', main), frame = $('.hero-frame');
-    var cards = $$('.hero-card'), ui = $$('.hero-ui > *'), logoA = $('.logo'), logoIn = $('.logo-in'), logoImg = $('.logo img');
+    var cards = $$('.hero-card'), ui = $$('.hero-ui > *'), logoA = $('.logo'), logoIn = $('.logo-in'), logoImg = $('.logo-in img');
     var chrome = $$('.pills, .hdr-r');
     var settled = false;
     function rect() {
@@ -607,7 +554,8 @@
 
     // the header wordmark starts large in the middle of the hero and glides into its place in the header as you scroll
     function big() {
-      var n = logoA.getBoundingClientRect(), phone = innerWidth <= 760;
+      // the wordmark's own box (the link now also holds the man): offsets ignore the transforms GSAP puts on it
+      var a = logoA.getBoundingClientRect(), n = { left: a.left + logoIn.offsetLeft, top: a.top + logoIn.offsetTop, width: logoIn.offsetWidth, height: logoIn.offsetHeight }, phone = innerWidth <= 760;
       var w = phone ? innerWidth * .8 : Math.min(innerWidth * .52, 860);
       w = Math.min(w, innerHeight * .24 * (n.width / n.height)); // short screens (phone landscape): never taller than ~a quarter of the view
       var s = w / n.width, h = n.height * s;
@@ -619,17 +567,20 @@
     G.to('.hero-k', { opacity: 0, y: -10, ease: 'none', scrollTrigger: { start: 0, end: function () { return innerHeight * .15; }, scrub: .3 } });
     G.fromTo(logoImg, { x: function () { return big().x; }, y: function () { return big().y; }, scale: function () { return big().scale; } },
       { x: 0, y: 0, scale: 1, ease: 'power1.inOut', scrollTrigger: { start: 0, end: function () { return innerHeight * .6; }, scrub: .5, invalidateOnRefresh: true } });
+    // once the wordmark has settled in the header, the man from the logo comes out of its left edge (his box clips at
+    // the wordmark, so he appears out of nothing) and slides left into place; scrolling back up slides him back into it
+    var manImg = $('.logo-man img');
+    if (manImg) G.fromTo(manImg, { x: function () { return manImg.offsetWidth + 9; } },
+      { x: 0, ease: 'power1.inOut', scrollTrigger: { start: function () { return innerHeight * .6; }, end: function () { return innerHeight * .95; }, scrub: .6, invalidateOnRefresh: true } });
 
     var c0 = cover(); G.set(img, { x: c0.x, y: c0.y, scale: c0.scale * 1.08, transformOrigin: '50% 50%' });
     G.set(logoIn, { opacity: 0, y: 40 });
-    var ldr = loader(logoImg, logoIn); // the Weider man flexes, rests, then the wordmark fades in where it sits
     // start every card fully below the viewport (measured), invisible, so nothing peeks in during the intro
     G.set(cards, { autoAlpha: 0, y: function (i, el) { return innerHeight - el.getBoundingClientRect().top + 80 + i * 60; }, rotate: function (i) { return i ? 6 : -6; } });
     G.set(ui, { opacity: 0, y: 18 });
     G.set(chrome, { opacity: 0 });
     hero.classList.add('go');
     var ready = Promise.race([Promise.all([document.fonts ? document.fonts.ready : 0, img.decode ? img.decode().catch(function () {}) : 0]), new Promise(function (r) { setTimeout(r, 1200); })]);
-    ready = Promise.all([ready, ldr]);
     ready.then(function () {
       var tl = G.timeline({ onComplete: function () {
         settled = true;

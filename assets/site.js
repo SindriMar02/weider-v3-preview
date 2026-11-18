@@ -350,7 +350,7 @@
     var vi = p.v[p.pv] && p.v[p.pv].avail ? p.pv : Math.max(0, p.v.findIndex(function (v) { return v.avail; }));
     var sel = p.opts.length ? p.v[vi].t.split(' / ') : [], qn = 1;
     var name = p.t.replace(/\s+\d[\d.,]*\s*(g|kg).*$/i, '');
-    root.innerHTML = '<p class="kick">Í sviðsljósinu</p><h2 class="h1" id="spot-t">' + esc(name) + '</h2><p class="spot-p">' + esc(short(p)) + '</p>' +
+    root.innerHTML = '<p class="kick">Í sviðsljósinu</p><h2 class="h1" id="spot-t">' + esc(name) + '</h2><p class="spot-p">' + esc(short(p)) + '</p>' + stats(p) +
       p.opts.map(function (o, oi) {
         return '<div class="opt' + (o.values.length === 1 ? ' one' : '') + '" role="group" aria-labelledby="qo' + oi + '"><span class="lbl" id="qo' + oi + '">' + esc(o.name) + ': <span class="ov"></span></span><div class="opt-v">' +
           o.values.map(function (v) { return '<button type="button" data-o="' + oi + '" data-val="' + esc(v) + '">' + esc(v) + '</button>'; }).join('') + '</div></div>';
@@ -996,11 +996,11 @@
     var cur = srcFor(vi);
     var thumbs = [], seen = {};
     if (p.v.length > 1) p.v.forEach(function (v, i) { var s = srcFor(i).s; if (!seen[s]) { seen[s] = 1; thumbs.push(i); } });
-    media.innerHTML = '<span class="ph' + (cur.photo ? '' : ' render') + '"><img src="' + cur.s + '" alt="' + esc(p.t) + '" width="1100" height="1467"></span>' + stats(p) +
+    media.innerHTML = '<span class="ph' + (cur.photo ? '' : ' render') + '"><img src="' + cur.s + '" alt="' + esc(p.t) + '" width="1100" height="1467"></span>' +
       (thumbs.length > 1 ? '<div class="thumbs" role="group" aria-label="Útgáfur">' + thumbs.slice(0, 6).map(function (i) {
         return '<button type="button" data-v="' + i + '" aria-pressed="' + (i === vi) + '" aria-label="' + esc(p.v[i].t) + '"><img src="' + renderSrc(p, i) + '" alt="" loading="lazy"></button>';
       }).join('') + '</div>' : '');
-    info.innerHTML = '<p class="kick">' + esc(catLabel[p.cat]) + '</p><h1 class="h1">' + esc(p.t) + '</h1><p class="pdp-s">' + esc(short(p)) + '</p>' +
+    info.innerHTML = '<p class="kick">' + esc(catLabel[p.cat]) + '</p><h1 class="h1">' + esc(p.t) + '</h1><p class="pdp-s">' + esc(short(p)) + '</p>' + stats(p) +
       p.opts.map(function (o, oi) {
         return '<div class="opt' + (o.values.length === 1 ? ' one' : '') + '" role="group" aria-labelledby="ol' + oi + '"><span class="lbl" id="ol' + oi + '">' + esc(o.name) + ': <span class="ov"></span></span><div class="opt-v">' +
           o.values.map(function (v) { return '<button type="button" data-o="' + oi + '" data-val="' + esc(v) + '">' + esc(v) + '</button>'; }).join('') + '</div></div>';

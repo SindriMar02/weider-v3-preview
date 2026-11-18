@@ -1,15 +1,15 @@
 /* Weider v3 — tokens from _docs/weider-v3-2026-11-15/design.md */
-/* display face: Manrope (Sindri picked it from 4 options on 15 Nov, after Stardom and Clash Display), variable 200-800 */
-@font-face { font-family: "Manrope"; src: url(fonts/Manrope-Variable.woff2) format("woff2"); font-weight: 200 800; font-display: swap; }
-@font-face { font-family: "Cabinet Grotesk"; src: url(fonts/CabinetGrotesk-Regular.woff2) format("woff2"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Cabinet Grotesk"; src: url(fonts/CabinetGrotesk-Medium.woff2) format("woff2"); font-weight: 500; font-display: swap; }
-@font-face { font-family: "Cabinet Grotesk"; src: url(fonts/CabinetGrotesk-Bold.woff2) format("woff2"); font-weight: 700; font-display: swap; }
+/* type (18 Nov, Sindri's pick from five systems on the real page): Archivo. Display = condensed (wdth 72) caps for
+   headings, echoing the WEIDER wordmark; text = Archivo at normal width. Both are static-width instances of the
+   variable font with the weight axis kept (300-800), self-hosted, latin subset. */
+@font-face { font-family: "Archivo Display"; src: url(fonts/ArchivoDisplay.woff2) format("woff2"); font-weight: 300 800; font-display: swap; }
+@font-face { font-family: "Archivo"; src: url(fonts/ArchivoText.woff2) format("woff2"); font-weight: 300 800; font-display: swap; }
 
 :root {
   --ground: #071318; --deep: #040A0D; --shot: #03070B; --surface: #0E2229; --raised: #15333C; --line: #1F3D46;
   --ink: #F2EFE8; --mute: #8FA3A8; --panel: #0A1A20; --card: #0F242B; --pink: #F2EFE8; --pmute: #93A6AB;
   --red: #D7261E; --red-t: #F05A4F;
-  --serif: "Manrope", "Cabinet Grotesk", system-ui, sans-serif; --sans: "Cabinet Grotesk", system-ui, -apple-system, sans-serif;
+  --serif: "Archivo Display", "Archivo", system-ui, sans-serif; --sans: "Archivo", system-ui, -apple-system, sans-serif;
   --pad: clamp(16px, 4vw, 56px); --r-card: 20px; --r-frame: 28px;
   --ease: cubic-bezier(.22, 1, .36, 1); --io: cubic-bezier(.76, 0, .24, 1);
   --hdr: 76px;
@@ -202,7 +202,7 @@ ul { padding: 0; list-style: none; }
 .deal-tile { position: relative; overflow: hidden; border-radius: var(--r-card); background: var(--red); color: #fff; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; min-height: 300px; }
 .deal-tile .lbl { color: rgba(255,255,255,.8); }
 .deal-tile .h2 { font-size: clamp(40px, 4vw, 60px); margin-top: auto; margin-bottom: 24px; }
-.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=f67763d) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=f67763d) no-repeat center / contain; pointer-events: none; }
+.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=b5c0d07) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=b5c0d07) no-repeat center / contain; pointer-events: none; }
 @media (max-width: 760px) { .deal-tile::before { left: auto; right: 18px; top: 50%; transform: translateY(-50%); width: 32%; } }
 .deal-arrows { display: flex; gap: 8px; }
 .arr { width: 46px; height: 46px; border-radius: 999px; display: grid; place-items: center; background: rgba(255,255,255,.16); color: #fff; transition: background-color .25s, opacity .25s; }
@@ -1167,3 +1167,18 @@ html.js body.home .logo-man img { transform: translateX(calc(100% + 9px)); } /* 
 @media (prefers-reduced-motion: reduce) { html.js body.home .logo-man img { transform: none; } }
 html.logo-off .logo-man { opacity: 0 !important; transition: opacity .25s; }
 @media (max-width: 760px) { .logo-man { padding-right: 7px; } .logo .logo-man img { height: 30px; } }
+
+/* ============ TYPE: Archivo condensed caps headings (18 Nov) ============ */
+.h1, .h2, .h3, .pre-n, .ax-iv b, .ask-how b, .at-n { font-weight: 700; text-transform: uppercase; letter-spacing: -.005em; }
+.h1 { line-height: .92; } .h2 { line-height: .95; }
+.h1 em, .h2 em { font-style: normal; }
+.pre-p strong, .as-pay strong, .axv-p strong, .at-p strong, .ask-stats strong, .stat strong, .price-l { letter-spacing: -.01em; }
+.kick { font-weight: 600; letter-spacing: .02em; text-transform: uppercase; font-size: 15px; }
+
+/* ============ NUTRITION FACTS (18 Nov): a solid row in the product info, never over the photo ============ */
+.stat, .pdp-m .stat { position: static; inset: auto; z-index: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 380px; margin: 6px 0 8px; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.stat p { padding: 14px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); gap: 4px; }
+.stat strong { font-size: 36px; line-height: 1; }
+.stat small { font-size: 14px; }
+@media (max-width: 760px) { .stat, .pdp-m .stat { gap: 8px; padding: 0; } .stat strong, .pdp-m .stat strong { font-size: 30px; } .stat p { padding: 12px 14px; } }
+.ax-hero .h1 { max-width: 12ch; } .ask-band .h2 { max-width: 15ch; } /* condensed caps: two lines, not four */

@@ -202,7 +202,7 @@ ul { padding: 0; list-style: none; }
 .deal-tile { position: relative; overflow: hidden; border-radius: var(--r-card); background: var(--red); color: #fff; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; min-height: 300px; }
 .deal-tile .lbl { color: rgba(255,255,255,.8); }
 .deal-tile .h2 { font-size: clamp(40px, 4vw, 60px); margin-top: auto; margin-bottom: 24px; }
-.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=0737ae2) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=0737ae2) no-repeat center / contain; pointer-events: none; }
+.deal-tile::before { content: ""; position: absolute; left: 34px; right: 34px; top: 58px; aspect-ratio: 1390 / 1248; background: rgba(0,0,0,.2); -webkit-mask: url(logo/weider-bust.webp?v=ba77a31) no-repeat center / contain; mask: url(logo/weider-bust.webp?v=ba77a31) no-repeat center / contain; pointer-events: none; }
 @media (max-width: 760px) { .deal-tile::before { left: auto; right: 18px; top: 50%; transform: translateY(-50%); width: 32%; } }
 .deal-arrows { display: flex; gap: 8px; }
 .arr { width: 46px; height: 46px; border-radius: 999px; display: grid; place-items: center; background: rgba(255,255,255,.16); color: #fff; transition: background-color .25s, opacity .25s; }
@@ -1114,3 +1114,54 @@ html.logo-off .logo-in { opacity: 0 !important; transition: opacity .25s; }
   .ax-cats button[aria-pressed="false"]:hover, .fchip[aria-pressed="false"]:hover, .ssort select:hover { border-color: var(--mute); color: var(--ink); }
 }
 .kick + .h1, .kick + .h2 { margin-top: 10px; }
+
+/* ============ HOME ÁSKRIFT BAND v2 (18 Nov): sells the saving, not the mechanics ============ */
+.ask-band { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); background: radial-gradient(90% 120% at 100% 0%, #1B4450 0%, #0D2229 48%, #081419 100%); border: 1px solid var(--line); position: relative; overflow: clip; }
+.ask-band::after { content: "15%"; position: absolute; right: -2%; bottom: -16%; font: 700 clamp(180px, 26vw, 380px)/1 var(--serif); letter-spacing: -.06em; color: rgba(242,239,232,.035); pointer-events: none; }
+.ask-band .h2 { margin: 14px 0 18px; max-width: 12ch; font-size: clamp(40px, 5.2vw, 76px); line-height: .98; }
+.ask-sub { max-width: 46ch; font-size: clamp(16px, 1.2vw, 18px); color: rgba(242,239,232,.76); }
+.ask-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 30px 0 32px; padding-top: 22px; border-top: 1px solid rgba(242,239,232,.12); }
+.ask-stats strong { display: block; font: 600 clamp(28px, 2.6vw, 40px)/1 var(--serif); letter-spacing: -.04em; color: var(--ink); }
+.ask-stats li:first-child strong { color: var(--red-t); }
+.ask-stats span { display: block; margin-top: 8px; font-size: 13px; line-height: 1.4; color: var(--mute); }
+.ask-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; }
+.ask-cta .btn svg { width: 18px; height: 18px; transition: transform .4s var(--ease); }
+@media (hover: hover) { .ask-cta .btn:hover svg { transform: translateX(4px); } }
+.ask-gift { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: rgba(242,239,232,.8); }
+.ask-gift svg { width: 20px; height: 20px; color: var(--red-t); }
+.ask-r { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0; padding: 0; border-radius: 24px; overflow: hidden; background: rgba(4,10,13,.6); border: 1px solid var(--line); color: var(--ink); box-shadow: 0 40px 80px -40px rgba(0,0,0,.8); transition: transform .6s var(--ease), border-color .3s; }
+@media (hover: hover) { .ask-r:hover { transform: translateY(-4px); border-color: #2C525C; } .ask-r:hover .at-c0 { transform: translateX(-10px) rotate(-7deg); } .ask-r:hover .at-c1 { transform: translateX(10px) rotate(7deg); } .ask-r:hover .at-go svg { transform: translateX(4px); } }
+.at-stage { position: relative; aspect-ratio: 16 / 10; background: radial-gradient(70% 90% at 50% 0%, #1F4A55 0%, #0A1A20 60%, #050C10 100%); }
+.at-c { position: absolute; top: 9%; width: 40%; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; background: var(--shot); border: 1px solid rgba(143,163,168,.18); box-shadow: 0 30px 50px -20px rgba(0,0,0,.85); transition: transform .7s var(--ease); }
+.at-c .ph { width: 100%; height: 100%; } .at-c img { width: 100%; height: 100%; object-fit: cover; }
+.at-c0 { left: 9%; transform: rotate(-5deg); z-index: 1; } .at-c1 { right: 9%; top: 13%; transform: rotate(5deg); z-index: 2; }
+.at-badge { position: absolute; z-index: 3; right: 6%; bottom: 8%; display: grid; place-items: center; align-content: center; width: clamp(86px, 9vw, 112px); aspect-ratio: 1; border-radius: 50%; background: var(--red); color: #fff; text-align: center; box-shadow: 0 16px 30px -12px rgba(215,38,30,.7); transform: rotate(-10deg); }
+.at-badge b { font: 700 clamp(24px, 2.4vw, 30px)/1 var(--serif); letter-spacing: -.04em; }
+.at-badge small { font-size: 11px; line-height: 1.2; max-width: 9ch; opacity: .9; margin-top: 2px; }
+.at-b { padding: 22px 24px 24px; }
+.at-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.at-top .lbl { color: var(--red-t); }
+.at-iv { font-size: 12px; color: var(--mute); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); }
+.at-n { font: 600 20px/1.25 var(--serif); letter-spacing: -.02em; margin: 12px 0 16px; }
+.at-n small { font: 400 13px var(--sans); color: var(--mute); }
+.at-n i { font-style: normal; color: var(--mute); margin: 0 8px; }
+.at-p strong { font: 600 clamp(36px, 3.4vw, 48px)/1 var(--serif); letter-spacing: -.04em; }
+.at-s { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-weight: 500; color: #7FD4A0; }
+.at-s b { font-weight: 700; } .at-s svg { width: 18px; height: 18px; }
+.at-go { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; font-weight: 700; font-size: 15px; }
+.at-go svg { width: 18px; height: 18px; transition: transform .4s var(--ease); }
+@media (max-width: 900px) { .ask-band { grid-template-columns: 1fr; } .ask-stats { gap: 12px; } }
+@media (max-width: 520px) { .ask-stats { grid-template-columns: 1fr 1fr; } .ask-stats li:last-child { grid-column: 1 / -1; } }
+.at-n small { white-space: nowrap; }
+
+/* ============ LOADER (18 Nov): the Weider man flexes, then the wordmark fades in where it sits ============ */
+.ldr { display: none; }
+html.ldr-on .ldr { display: block; position: fixed; inset: 0; z-index: 39; background: var(--deep); isolation: isolate; animation: ldr-failsafe .6s 9s forwards; }
+/* the clip is white on pure black: the wrapper itself blends with "screen" so the black drops out against the loader colour */
+.ldr-man { position: absolute; left: 50%; top: 30%; width: 420px; height: 420px; transform-origin: 50% 60%; mix-blend-mode: screen; }
+.ldr-man video { display: block; width: 100%; height: 100%; object-fit: contain; }
+html.ldr-on body.home .logo-in { animation-delay: 9s; }
+html.ldr-on body { overflow: hidden; }
+@keyframes ldr-failsafe { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .ldr { display: none !important; } }
+html.ldr-on .hdr { pointer-events: none; } /* a tap on the loader skips it; it must not also hit the home link under it */

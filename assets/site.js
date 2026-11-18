@@ -532,6 +532,48 @@
     reveals('.svc li, .best .sec-h, .best .tabs, .deal-tile, .cols-h > *, .spot-top, .spot-rel, .stat, .goals .sec-h, .goal');
   }
 
+  /* ---------- LOADER (18 Nov): the Weider man from the logo comes to life, flexes, rests in the logo pose, then the real
+     header wordmark fades in exactly where it sits on the landing page and the loader dissolves into the hero intro ---------- */
+  function loader(logoImg, logoIn) {
+    var root = document.documentElement, el = $('#ldr');
+    if (!el || !root.classList.contains('ldr-on') || !G) { root.classList.remove('ldr-on'); return Promise.resolve(false); }
+    var v = $('video', el), box = $('.ldr-man', el);
+    // lockup geometry from the official bust logo (900 px wide wordmark): man 581 x 533 px, 62 px above the wordmark,
+    // centre 17 px left of the wordmark centre; in the clip the man fills 793 x 728 of 1280 px, top-left at 243.5, 276
+    function place() {
+      var r = logoImg.getBoundingClientRect(), k = r.width / 900, hdr = 76;
+      var above = r.top - hdr - 16, below = innerHeight - r.bottom - 24, gap = 62 * k;
+      var up = above >= 150 || above >= below, space = (up ? above : below) - gap;
+      var mh = Math.max(120, Math.min(533 * k, space)), V = mh / (728 / 1280), cx = r.left + r.width / 2 - 17 * k;
+      var manTop = up ? r.top - gap - mh : r.bottom + gap;
+      G.set(box, { width: V, height: V, left: cx - V / 2, top: manTop - V * 276 / 1280 });
+    }
+    G.set(logoIn, { y: 0 }); // fades in exactly where it sits: no slide
+    place(); addEventListener('resize', place);
+    return new Promise(function (done) {
+      var over = false, started = false;
+      function finish(fast) {
+        if (over) return; over = true; removeEventListener('resize', place);
+        ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { removeEventListener(t, skip, true); });
+        var t = G.timeline({ onComplete: function () { el.remove(); root.classList.remove('ldr-on'); } });
+        t.to(logoIn, { opacity: 1, y: 0, duration: fast ? .45 : .9, ease: 'power3.out' }, fast ? 0 : .2)
+          .add(function () { done(true); }, fast ? .1 : .75)
+          .to(box, { opacity: 0, y: -24, duration: fast ? .35 : .7, ease: 'power2.in' }, fast ? .05 : .75)
+          .to(el, { opacity: 0, duration: fast ? .4 : .8, ease: 'power2.inOut' }, fast ? .1 : .85);
+      }
+      function skip() { v.pause(); finish(true); }
+      ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { addEventListener(t, skip, { capture: true, passive: true }); });
+      G.from(box, { opacity: 0, scale: .96, duration: .6, ease: 'power2.out' });
+      v.addEventListener('ended', function () { setTimeout(finish, 250); });
+      v.playbackRate = 1.3;
+      var p = v.play(); started = true;
+      if (p && p.catch) p.catch(function () { setTimeout(finish, 600); }); // autoplay refused: show the resting man, then go on
+      // never hold the page hostage: a stalled clip ends the loader
+      setTimeout(function () { if (!over && (v.readyState < 2 || v.paused)) finish(); }, 2500);
+      setTimeout(function () { finish(); }, 7500);
+    });
+  }
+
   function heroIntro() {
     var hero = $('.hero'); if (!hero) return;
     var main = $('.hero-main'), img = $('img', main), frame = $('.hero-frame');
@@ -570,12 +612,14 @@
 
     var c0 = cover(); G.set(img, { x: c0.x, y: c0.y, scale: c0.scale * 1.08, transformOrigin: '50% 50%' });
     G.set(logoIn, { opacity: 0, y: 40 });
+    var ldr = loader(logoImg, logoIn); // the Weider man flexes, rests, then the wordmark fades in where it sits
     // start every card fully below the viewport (measured), invisible, so nothing peeks in during the intro
     G.set(cards, { autoAlpha: 0, y: function (i, el) { return innerHeight - el.getBoundingClientRect().top + 80 + i * 60; }, rotate: function (i) { return i ? 6 : -6; } });
     G.set(ui, { opacity: 0, y: 18 });
     G.set(chrome, { opacity: 0 });
     hero.classList.add('go');
     var ready = Promise.race([Promise.all([document.fonts ? document.fonts.ready : 0, img.decode ? img.decode().catch(function () {}) : 0]), new Promise(function (r) { setTimeout(r, 1200); })]);
+    ready = Promise.all([ready, ldr]);
     ready.then(function () {
       var tl = G.timeline({ onComplete: function () {
         settled = true;
@@ -800,8 +844,21 @@
   function askTeaser() {
     var el = $('#ask-teaser'); if (!el) return;
     var lines = [{ h: 'gold-whey', vi: bestV(byH['gold-whey'], '2 kg'), q: 1 }, { h: 'micronized-creatine', vi: bestV(byH['micronized-creatine']), q: 1 }], m = boxMath(lines, 4);
-    el.innerHTML = '<div class="at-imgs">' + lines.map(function (l) { return ph(byH[l.h]); }).join('') + '</div><div class="at-b"><p class="lbl">Dæmi: Styrkur-boxið</p><p class="at-n">' + lines.map(function (l) { var p = byH[l.h]; return esc(p.t.replace(/\s+\d[\d.,]*\s*(g|kg).*$/i, '')) + (many(p) ? ' <small>' + esc(p.v[l.vi].t.split(' / ').pop()) + '</small>' : ''); }).join(' + ') + '</p>' +
-      '<div class="at-p"><s>' + kr(m.full) + '</s><strong>' + kr(m.pay) + '</strong><span>á mánuði · frí heimsending</span></div><p class="at-s">Þú sparar ' + kr(m.perYear) + ' á ári</p></div>';
+    var nm = function (l) { var p = byH[l.h]; return esc(p.t.replace(/\s+\d[\d.,–\s]*(g|kg)\b.*$/i, '')) + (many(p) ? ' <small>' + esc(p.v[l.vi].t.split(' / ').pop()) + '</small>' : ''); };
+    el.innerHTML = '<div class="at-stage">' + lines.map(function (l, i) { return '<span class="at-c at-c' + i + '">' + ph(byH[l.h]) + '</span>'; }).join('') +
+      '<span class="at-badge"><b>−15%</b><small>af öllu boxinu</small></span></div>' +
+      '<div class="at-b"><div class="at-top"><span class="lbl">Styrkur-boxið</span><span class="at-iv">Mánaðarlega · frí heimsending</span></div>' +
+      '<p class="at-n">' + lines.map(nm).join('<i>+</i>') + '</p>' +
+      '<div class="at-p"><s>' + kr(m.full) + '</s><strong>' + kr(m.pay) + '</strong><span>á mánuði</span></div>' +
+      '<p class="at-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>Þú sparar <b>' + kr(m.perYear) + '</b> á ári</p><span class="at-go">Skoða boxið ' + ICON.arrow + '</span></div>';
+    if (!G || !ST || reduce) return;
+    var tl = G.timeline({ paused: true });
+    // GSAP moves the wrappers' 'translate' only, so the cards' CSS tilt and hover spread stay in charge of 'transform'
+    tl.from('.at-c0', { translate: '48px 24px', opacity: 0, duration: 1.1, ease: 'expo.out', clearProps: 'translate,opacity' }, 0)
+      .from('.at-c1', { translate: '-48px 24px', opacity: 0, duration: 1.1, ease: 'expo.out', clearProps: 'translate,opacity' }, .08)
+      .from('.at-badge', { scale: .4, rotation: -40, opacity: 0, duration: .8, ease: 'back.out(2)', clearProps: 'all' }, .5)
+      .from('.at-b > *', { y: 18, opacity: 0, duration: .7, stagger: .06, ease: 'power3.out', clearProps: 'all' }, .3);
+    ST.create({ trigger: el, start: 'top 82%', once: true, onEnter: function () { tl.play(); } });
   }
 
   /* ---------- SHOP: filters built around what people come to buy ---------- */

@@ -540,13 +540,17 @@
     var v = $('video', el), box = $('.ldr-man', el);
     // lockup geometry from the official bust logo (900 px wide wordmark): man 581 x 533 px, 62 px above the wordmark,
     // centre 17 px left of the wordmark centre; in the clip the man fills 793 x 728 of 1280 px, top-left at 243.5, 276
+    var rest = null; // phones: where the man glides to (above the wordmark) once he has flexed
+    function geo(mh, cx, manTop) { var V = mh / (728 / 1280); return { width: V, height: V, left: cx - V / 2, top: manTop - V * 276 / 1280 }; }
     function place() {
-      var r = logoImg.getBoundingClientRect(), k = r.width / 900, hdr = 76;
-      var above = r.top - hdr - 16, below = innerHeight - r.bottom - 24, gap = 62 * k;
-      var up = above >= 150 || above >= below, space = (up ? above : below) - gap;
-      var mh = Math.max(120, Math.min(533 * k, space)), V = mh / (728 / 1280), cx = r.left + r.width / 2 - 17 * k;
-      var manTop = up ? r.top - gap - mh : r.bottom + gap;
-      G.set(box, { width: V, height: V, left: cx - V / 2, top: manTop - V * 276 / 1280 });
+      var r = logoImg.getBoundingClientRect(), k = r.width / 900, hdr = 76, gap = 62 * k, cx = r.left + r.width / 2 - 17 * k;
+      var above = r.top - hdr - 16, mh;
+      if (above >= 150) { mh = Math.min(533 * k, above - gap); G.set(box, geo(mh, cx, r.top - gap - mh)); rest = null; return; }
+      // little room above the wordmark (phones): flex large in the open space under it, then settle into the logo lockup above it
+      var below = innerHeight - r.bottom - 24, cxs = innerWidth / 2;
+      var play = Math.max(140, Math.min(below - 48, innerWidth * .6 * 533 / 581)), pg = geo(play, cxs, r.bottom + (below - play) / 2);
+      var rm = Math.max(60, Math.min(533 * k, r.top - 12 - gap)), rg = geo(rm, cx, r.top - gap - rm);
+      G.set(box, pg); rest = { x: rg.left - pg.left, y: rg.top - pg.top, scale: rg.width / pg.width };
     }
     G.set(logoIn, { y: 0 }); // fades in exactly where it sits: no slide
     place(); addEventListener('resize', place);
@@ -556,10 +560,12 @@
         if (over) return; over = true; removeEventListener('resize', place);
         ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { removeEventListener(t, skip, true); });
         var t = G.timeline({ onComplete: function () { el.remove(); root.classList.remove('ldr-on'); } });
-        t.to(logoIn, { opacity: 1, y: 0, duration: fast ? .45 : .9, ease: 'power3.out' }, fast ? 0 : .2)
-          .add(function () { done(true); }, fast ? .1 : .75)
-          .to(box, { opacity: 0, y: -24, duration: fast ? .35 : .7, ease: 'power2.in' }, fast ? .05 : .75)
-          .to(el, { opacity: 0, duration: fast ? .4 : .8, ease: 'power2.inOut' }, fast ? .1 : .85);
+        var m = !fast && rest ? 1 : 0; // phones: glide up into the lockup first, then the wordmark fades in under him
+        if (m) t.to(box, { x: rest.x, y: rest.y, scale: rest.scale, transformOrigin: '0 0', duration: .95, ease: 'power3.inOut' }, 0);
+        t.to(logoIn, { opacity: 1, y: 0, duration: fast ? .45 : .9, ease: 'power3.out' }, fast ? 0 : m ? .55 : .2)
+          .add(function () { done(true); }, fast ? .1 : m ? 1.3 : .75)
+          .to(box, m ? { opacity: 0, duration: .6, ease: 'power2.in' } : { opacity: 0, y: -24, duration: fast ? .35 : .7, ease: 'power2.in' }, fast ? .05 : m ? 1.35 : .75)
+          .to(el, { opacity: 0, duration: fast ? .4 : .8, ease: 'power2.inOut' }, fast ? .1 : m ? 1.4 : .85);
       }
       function skip() { v.pause(); finish(true); }
       ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { addEventListener(t, skip, { capture: true, passive: true }); });
